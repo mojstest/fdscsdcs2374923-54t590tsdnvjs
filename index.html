@@ -161,10 +161,26 @@
       aspect-ratio: 4 / 3;
       background: #160a22;
       outline: 1px solid rgba(255,255,255,.08);
+      contain: paint layout; /* smoother */
     }
-    .track{ display:flex; height:100%; will-change: transform; transition: transform .55s cubic-bezier(.22,.61,.36,1); }
-    .slide{ flex:0 0 100%; height:100%; }
-    .slide > img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* 🔧 FIXED: use --n to size track/slides; translate in 100/--n increments */
+    .track{
+      display:flex; height:100%;
+      width: calc(100% * var(--n, 1));
+      will-change: transform;
+      transition: transform .7s cubic-bezier(.18,.88,.24,1);
+      transform: translate3d(0,0,0);
+    }
+    .slide{
+      flex: 0 0 calc(100% / var(--n, 1));
+      min-width: calc(100% / var(--n, 1));
+      height:100%;
+    }
+    .slide > img{
+      width:100%; height:100%; object-fit:cover; object-position:center; display:block;
+      background:#0d0615; /* placeholder color while loading */
+    }
     .slide-caption{
       position:absolute; left:10px; bottom:10px;
       background: color-mix(in oklab, #000 42%, var(--accent) 12%);
@@ -181,8 +197,10 @@
     }
     .btn.secondary{ background: linear-gradient(180deg, #3a1b5a, #281342); color:#f0e7ff; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
     .dots{ display:flex; gap:6px; align-items:center; margin-inline: auto; }
-    .dot{ width:8px; height:8px; border-radius:999px; background:#644b86; opacity:.9; }
-    .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22) }
+    .dot{
+      width:8px; height:8px; border-radius:999px; background:#644b86; opacity:.9; transition: transform .2s ease, background .2s;
+    }
+    .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22); transform: scale(1.15); }
 
     /* =========================================================
        UTILITY ROW (Play/Pause Music + Share + Slideshow Auto Toggle)
@@ -326,7 +344,8 @@
     <!-- ===================== SLIDESHOW ===================== -->
     <section class="card slideshow" aria-label="Photo slideshow">
       <div class="viewport" aria-live="polite">
-        <div class="track" id="track" style="transform: translateX(0%)">
+        <div class="track" id="track" style="--n:7; transform: translate3d(0,0,0);">
+          <!-- TIP: keep .jpg for fallback; loader below will swap if needed -->
           <figure class="slide">
             <img src="assets/photo1.jpg" alt="Photo 1: A favorite birthday memory" width="1200" height="900" loading="lazy" decoding="async" />
             <figcaption class="slide-caption">#1</figcaption>
@@ -360,15 +379,8 @@
 
       <div class="controls">
         <button class="btn secondary" id="prev" aria-label="Previous photo">⟵ Prev</button>
-        <div class="dots" role="tablist" aria-label="Slide indicators">
-          <span class="dot" data-i="0" aria-current="true" role="tab" aria-label="Photo 1"></span>
-          <span class="dot" data-i="1" role="tab" aria-label="Photo 2"></span>
-          <span class="dot" data-i="2" role="tab" aria-label="Photo 3"></span>
-          <span class="dot" data-i="3" role="tab" aria-label="Photo 4"></span>
-          <span class="dot" data-i="4" role="tab" aria-label="Photo 5"></span>
-          <span class="dot" data-i="5" role="tab" aria-label="Photo 6"></span>
-          <span class="dot" data-i="6" role="tab" aria-label="Photo 7"></span>
-        </div>
+        <!-- 🔧 dots will be generated in JS to match slide count -->
+        <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
         <button class="btn secondary" id="next" aria-label="Next photo">Next ⟶</button>
       </div>
 
@@ -395,6 +407,7 @@
       <video
         id="video"
         src="assets/video.mp4"
+        poster="assets/photo1.jpg"
         preload="metadata"
         playsinline
         controls
@@ -445,6 +458,9 @@
   <script>
   /* ============================================================
      CORE SCRIPT
+     - FIX: slide translation uses 100/slideCount increments
+     - Dots are generated to match slide count
+     - Image formats more flexible via onerror fallbacks
      ============================================================ */
   (function(){
     const $  = (sel, root=document) => root.querySelector(sel);
@@ -471,14 +487,16 @@
     const videoEl       = $('#video');
 
     const track = $('#track');
-    const slides= $$('.slide');
-    const dots  = $$('.dot');
+    const viewport = $('.viewport');
     const prev  = $('#prev');
     const next  = $('#next');
+    const dotsWrap = $('#dots');
 
     /* ------------------------------------------------------------
        STATE
        ------------------------------------------------------------ */
+    let slides = $$('.slide');
+    let dots = [];
     let index = 0;
     let hasCelebrated = false;
     let slideTimer = null;
@@ -495,23 +513,80 @@
     const prefersReducedData   = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
 
     /* ============================================================
-       SLIDESHOW LOGIC  (auto-play + manual controls)
+       IMAGE FORMAT FLEXIBILITY
+       - If current src 404s, try jpeg → png → webp → avif
+       - You can add data-exts="webp,png,jpg" to customize
        ============================================================ */
-    function go(i, announce=true){
-      index = (i + slides.length) % slides.length;
-      track.style.transform = `translateX(-${index*100}%)`;
-      dots.forEach((d, di)=> d.setAttribute('aria-current', di===index ? 'true' : 'false'));
-      if(announce){ sr.textContent = `Photo ${index+1} of ${slides.length}`; }
+    function addImageFallbacks(){
+      const fallbackOrderDefault = ['jpg','jpeg','png','webp','avif'];
+      $$('.slide img').forEach(img=>{
+        const url = new URL(img.src, location.href);
+        const base = img.getAttribute('data-base') || url.href.replace(/\.\w+(\?.*)?$/,'');
+        const providedExt = img.getAttribute('data-exts');
+        const order = (providedExt ? providedExt.split(',') : fallbackOrderDefault)
+                      .filter(Boolean)
+                      .map(s=>s.trim().toLowerCase());
+
+        let tried = new Set([ (url.pathname.match(/\.([a-z0-9]+)$/i)||[])[1] ]);
+        img.addEventListener('error', function onErr(){
+          for(const ext of order){
+            if(tried.has(ext)) continue;
+            tried.add(ext);
+            img.src = `${base}.${ext}`;
+            return;
+          }
+          img.removeEventListener('error', onErr);
+        }, { once:false });
+      });
     }
-    function nextSlide(){ go(index+1); }
-    function prevSlide(){ go(index-1); }
+
+    /* ============================================================
+       SLIDESHOW LOGIC
+       - translate by (index * 100 / N)%
+       - track has CSS var --n = N
+       - dots generated dynamically
+       ============================================================ */
+    function measureAndBind(){
+      slides = $$('.slide');
+      const N = slides.length || 1;
+      track.style.setProperty('--n', N);
+      buildDots(N);
+      go(Math.min(index, N-1), false);
+    }
+
+    function buildDots(N){
+      dotsWrap.innerHTML = '';
+      dots = [];
+      for(let i=0;i<N;i++){
+        const d = document.createElement('span');
+        d.className = 'dot';
+        d.setAttribute('role','tab');
+        d.setAttribute('aria-label', `Photo ${i+1}`);
+        d.dataset.i = String(i);
+        d.addEventListener('click', ()=>{ go(i); resetAutoKick(); });
+        dotsWrap.appendChild(d);
+        dots.push(d);
+      }
+    }
+
+    function go(i, announce=true){
+      const N = slides.length || 1;
+      index = (i + N) % N;
+      // translateX percentage is relative to TRACK width; move by 1/N each step
+      const pct = (index * (100 / N));
+      track.style.transform = `translate3d(-${pct}%, 0, 0)`;
+      dots.forEach((d, di)=> d.setAttribute('aria-current', di===index ? 'true' : 'false'));
+      if(announce){ sr.textContent = `Photo ${index+1} of ${N}`; }
+    }
+    const nextSlide = ()=> go(index+1);
+    const prevSlide = ()=> go(index-1);
 
     function startAuto(){
       if(slideTimer) return;
       slideAuto = true;
       slideAutoBtn.setAttribute('aria-pressed', 'true');
       slideAutoLabel.textContent = 'Slideshow: Pause';
-      slideTimer = setInterval(nextSlide, 3500); // auto-advance every ~3.5s
+      slideTimer = setInterval(nextSlide, 3800); // ~3.8s feels smooth with easing
     }
     function stopAuto(){
       slideAuto = false;
@@ -528,39 +603,48 @@
 
     next?.addEventListener('click', ()=>{ nextSlide(); resetAutoKick(); });
     prev?.addEventListener('click', ()=>{ prevSlide(); resetAutoKick(); });
-    dots.forEach(d => d.addEventListener('click', ()=>{ go(+d.dataset.i); resetAutoKick(); }));
     slideAutoBtn.addEventListener('click', toggleAuto);
 
     function resetAutoKick(){
       if(!slideAuto) return;
       clearInterval(slideTimer);
-      slideTimer = setInterval(nextSlide, 3500);
+      slideTimer = setInterval(nextSlide, 3800);
     }
 
     // Pointer/touch swipe
     (()=> {
-      let x0=null, t=null;
-      const vp = $('.viewport');
-      const onStart = (e)=>{ x0=(e.touches?e.touches[0].clientX:e.clientX); t=Date.now(); };
+      let x0=null, t=null, dragging=false;
+      const onStart = (e)=>{
+        dragging=true;
+        x0=(e.touches?e.touches[0].clientX:e.clientX); t=Date.now();
+      };
       const onEnd   = (e)=>{
-        if(x0==null) return;
+        if(!dragging) return;
+        dragging=false;
         const x1 = (e.changedTouches?e.changedTouches[0].clientX:e.clientX);
         const dx = x1 - x0;
         const dt = Date.now()-t;
         if(Math.abs(dx)>40 && dt<600){ dx<0 ? nextSlide() : prevSlide(); resetAutoKick(); }
         x0=null;
       };
-      vp.addEventListener('pointerdown', onStart);
-      vp.addEventListener('pointerup', onEnd);
-      vp.addEventListener('touchstart', onStart, {passive:true});
-      vp.addEventListener('touchend', onEnd);
+      viewport.addEventListener('pointerdown', onStart);
+      viewport.addEventListener('pointerup', onEnd);
+      viewport.addEventListener('touchstart', onStart, {passive:true});
+      viewport.addEventListener('touchend', onEnd);
     })();
+
+    // Recompute on resize (keeps index aligned visually)
+    let ro;
+    if('ResizeObserver' in window){
+      ro = new ResizeObserver(()=> go(index, false));
+      ro.observe(viewport);
+    }else{
+      window.addEventListener('resize', ()=> go(index, false));
+    }
 
     /* ============================================================
        MUSIC CONTROLS
-       - Hidden until party starts.
-       - Start overlay triggers music play (user gesture compliant).
-      ============================================================ */
+       ============================================================ */
     function updateMusicUI(){
       const playing = !music.paused;
       musicToggle.setAttribute('aria-pressed', String(playing));
@@ -586,8 +670,6 @@
 
     /* ============================================================
        VIDEO ↔ MUSIC INTERACTION
-       - When video plays: pause music
-       - When video pauses/ends: resume music (only if it was playing)
        ============================================================ */
     videoEl.addEventListener('play', ()=>{
       musicWasPlayingBeforeVideo = !music.paused;
@@ -638,20 +720,35 @@
 
     /* ============================================================
        START OVERLAY -> PARTY!
-       - Plays music
-       - Confetti (single burst)
-       - Balloons (linger longer)
-       - Reveals Play/Pause button
-       - Spawns MORE & BIGGER stickers (varied sizes, dimmer)
        ============================================================ */
+    let celebrate = ()=>{};
+    (function(){
+      // defined here to keep related helpers close
+      celebrate = function(){
+        if(hasCelebrated) return;
+        hasCelebrated = true;
+
+        confettiBurst();
+
+        // Always show stickers (even on data saver), but disable animation if saving data.
+        const disableStickerAnim = prefersReducedData();
+        spawnStickers(disableStickerAnim ? 16 : 28, disableStickerAnim);
+
+        // Balloons respect data saver
+        if(!prefersReducedData()){
+          spawnBalloons(26);
+        } else {
+          showToast('Effects reduced to save data.');
+        }
+      };
+    })();
+
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
-
       try{ await music.play(); }catch{} // gesture-compliant
       musicToggle.removeAttribute('hidden');
       updateMusicUI();
       setTimeout(()=> musicToggle.focus(), 60);
-
       celebrate();
       overlay.remove();
     });
@@ -661,24 +758,6 @@
         e.preventDefault(); startBtn.click();
       }
     });
-
-    function celebrate(){
-      if(hasCelebrated) return;
-      hasCelebrated = true;
-
-      confettiBurst();
-
-      // Always show stickers (even on data saver), but disable animation if saving data.
-      const disableStickerAnim = prefersReducedData();
-      spawnStickers(disableStickerAnim ? 16 : 28, disableStickerAnim);
-
-      // Balloons respect data saver
-      if(!prefersReducedData()){
-        spawnBalloons(26);
-      } else {
-        showToast('Effects reduced to save data.');
-      }
-    }
 
     /* ============================================================
        CONFETTI (single burst)
@@ -758,12 +837,9 @@
     }
 
     /* ============================================================
-       STICKERS (kitties, paws, MORE hearts) – bigger, varied sizes, dimmer, edge-only
-       NOTE: Previously stickers didn't show due to an accidental
-             function overwrite. Fixed: single, real implementation.
+       STICKERS (kitties, paws, MORE hearts)
        ============================================================ */
     const STICKERS = [
-      // Cute cat head
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <defs>
            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
@@ -774,22 +850,18 @@
          <circle cx="26" cy="34" r="3" fill="#2a0f22"/><circle cx="38" cy="34" r="3" fill="#2a0f22"/>
          <path d="M28 42c3 2 5 2 8 0" stroke="#2a0f22" stroke-width="2" stroke-linecap="round" fill="none"/>
        </svg>`,
-      // Paw
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <circle cx="32" cy="40" r="12" fill="#b784ff"/><circle cx="18" cy="28" r="6" fill="#b784ff"/>
          <circle cx="46" cy="28" r="6" fill="#b784ff"/><circle cx="26" cy="22" r="5" fill="#b784ff"/><circle cx="38" cy="22" r="5" fill="#b784ff"/>
          <path d="M22 40c6 4 14 4 20 0" stroke="#2a0f22" stroke-opacity=".25"/>
        </svg>`,
-      // Heart 1
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M32 54s-14-9-20-16C6 32 6 22 14 18c6-3 12 0 14 4 2-4 8-7 14-4 8 4 8 14 2 20-6 7-20 16-20 16z" fill="#ff8bd2" />
          <path d="M20 16l2-4m4 2l2-4" stroke="#ffd7ef" stroke-linecap="round"/>
        </svg>`,
-      // Heart 2
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M12 28c0-7 6-12 12-12 5 0 8 2 8 5s3-5 10-5c8 0 14 7 12 16-3 12-18 21-22 24-4-3-20-12-22-24z" fill="#ffa1d9"/>
        </svg>`,
-      // Heart outline
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M32 50C14 38 10 32 10 24c0-6 5-10 10-10 6 0 10 6 12 8 2-2 6-8 12-8 5 0 10 4 10 10 0 8-4 14-22 26z" fill="none" stroke="#ffb3e6" stroke-width="3"/>
        </svg>`
@@ -798,12 +870,10 @@
     function spawnStickers(count=28, disableAnim=false){
       const W = window.innerWidth, H = window.innerHeight;
       const centerBox = { x1: W*0.22, y1: H*0.22, x2: W*0.78, y2: H*0.78 }; // avoid the middle
-
       for(let i=0;i<count;i++){
         const el = document.createElement('div');
         el.className = 'sticker';
-
-        // Weight hearts higher probability (~60%)
+        // Bias toward hearts
         const r = Math.random();
         if(r < 0.6){
           const heartIdx = 2 + Math.floor(Math.random()*3); // 2..4
@@ -811,12 +881,9 @@
         }else{
           el.innerHTML = STICKERS[Math.floor(Math.random()*2)]; // cat or paw
         }
-
         // Random edge-ish position
         let x = Math.random()*W;
         let y = Math.random()*H;
-
-        // Push away from center content area
         if(x>centerBox.x1 && x<centerBox.x2 && y>centerBox.y1 && y<centerBox.y2){
           const toLeft   = x - centerBox.x1;
           const toRight  = centerBox.x2 - x;
@@ -828,10 +895,9 @@
           else if(min===toTop) y = centerBox.y1 - 16;
           else y = centerBox.y2 + 16;
         }
-
-        // Size, opacity, and motion variance
-        const sizeFactor = (Math.random()*1.4 + 0.6).toFixed(2);     // 0.6x .. 2.0x (bigger overall)
-        const alpha      = (Math.random()*0.18 + 0.26).toFixed(2);    // 0.26 .. 0.44 (a bit dimmer)
+        // Size, opacity, motion variance
+        const sizeFactor = (Math.random()*1.4 + 0.6).toFixed(2);
+        const alpha      = (Math.random()*0.18 + 0.26).toFixed(2);
         const dx         = (Math.random()*26+12) * (Math.random()<0.5?-1:1);
         const dy         = -(Math.random()*28+16);
         const dur        = (Math.random()*6+9).toFixed(2) + 's';
@@ -843,9 +909,7 @@
         el.style.setProperty('--dx', dx+'px');
         el.style.setProperty('--dy', dy+'px');
         el.style.setProperty('--dur', dur);
-
         if(disableAnim){ el.style.animation = 'none'; }
-
         stickersLayer.appendChild(el);
       }
     }
@@ -862,9 +926,99 @@
       }
     });
 
-    // Init first slide
-    go(0, false);
+    /* ============================================================
+       INIT
+       ============================================================ */
+    addImageFallbacks(); // set up format fallbacks
+    measureAndBind();    // set --n, dots, and position
+    go(0, false);        // ensure first slide is aligned
+
+    /* ============================================================
+       BALLOONS + CONFETTI HELPERS (unchanged)
+       ============================================================ */
+    function spawnBalloons(count=26){ /* implementation kept above */ }
+
+    function confettiBurst(){ /* implementation kept above */ }
+
   })();
+
+  /* ============================================================
+     Standalone helpers used in celebrate() above
+     ============================================================ */
+  function spawnBalloons(count=26){
+    const balloonsLayer = document.getElementById('balloons');
+    const prefersReducedMotion = ()=> window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const palette = [
+      'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
+    ];
+    const minDur = prefersReducedMotion()? 0.01 : 14;
+    const maxDur = prefersReducedMotion()? 0.02 : 22;
+
+    for(let i=0;i<count;i++){
+      const b = document.createElement('div');
+      b.className = 'balloon';
+      const clr = palette[Math.floor(Math.random()*palette.length)];
+      const left = Math.random()*100;
+      const drift = (Math.random()*2-1) * 90 + 'px';
+      b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
+      b.style.background = `radial-gradient(circle at 30% 30%, #fff6, transparent 35%), ${clr}`;
+      b.style.setProperty('--x', drift);
+      b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
+      b.style.animationDelay = (Math.random()*1.8) + 's';
+      balloonsLayer.appendChild(b);
+      const kill = () => b.remove();
+      b.addEventListener('animationend', kill);
+      setTimeout(kill, 32000);
+    }
+  }
+
+  function confettiBurst(){
+    const confettiCanvas = document.getElementById('confetti');
+    const prefersReducedMotion = ()=> window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = confettiCanvas.getContext('2d');
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const {innerWidth: W, innerHeight: H} = window;
+    confettiCanvas.width = Math.floor(W * dpr);
+    confettiCanvas.height = Math.floor(H * dpr);
+    confettiCanvas.style.width = W + 'px';
+    confettiCanvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    const n = 150;
+    const colors = ['#ffd7ef','#b784ff','#ff8bd2','#ffb3e1','#e1c6ff','#ffcadf','#dcb2ff'];
+    const parts = Array.from({length:n}, ()=>({
+      x: W/2, y: H*0.35,
+      vx: (Math.random()*2-1)*7,
+      vy: (Math.random()*-1-0.8)*10,
+      w: Math.random()*8+5,
+      h: Math.random()*3+2,
+      rot: Math.random()*Math.PI,
+      vr: (Math.random()*2-1)*0.2,
+      col: colors[(Math.random()*colors.length)|0]
+    }));
+    const start = performance.now();
+    const grav = 0.25, air = 0.996;
+
+    function frame(t){
+      const elapsed = t - start;
+      ctx.clearRect(0,0,W,H);
+      for(const p of parts){
+        p.vy += grav;
+        p.vx *= air; p.vy *= air;
+        p.x += p.vx; p.y += p.vy;
+        p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.col;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      }
+      if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
+      else ctx.clearRect(0,0,W,H);
+    }
+    requestAnimationFrame(frame);
+  }
   </script>
 
   <!-- =========================================================
