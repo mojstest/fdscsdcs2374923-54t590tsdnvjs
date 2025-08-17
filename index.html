@@ -186,7 +186,7 @@
     .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22) }
 
     /* =========================================================
-       UTILITY ROW (Play/Pause + Share)
+       UTILITY ROW (Play/Pause + Share + Slide Auto Toggle)
        ========================================================= */
     .utility{ display:flex; flex-wrap:wrap; gap:8px; padding: var(--pad); justify-content:center; }
     .pill{
@@ -245,10 +245,10 @@
 
     .balloon{
       position:absolute;
-      width: clamp(20px, 4.6vw, 32px);
-      height: clamp(28px, 7vw, 48px);
+      width: clamp(20px, 4.6vw, 36px);
+      height: clamp(28px, 7vw, 52px);
       border-radius: 50% 50% 45% 45% / 55% 55% 45% 45%;
-      opacity:.92;
+      opacity:.9;
       transform: translateY(100vh);
       box-shadow: inset 0 -8px 18px rgba(0,0,0,.18);
       animation: rise linear both;
@@ -266,20 +266,21 @@
       to  { transform: translateY(-110px) translateX(calc(var(--x, 0) + 10px)) rotate(6deg) }
     }
 
-    /* Cute floating stickers (cats, paws, hearts) */
+    /* Cute floating stickers (cats, paws, hearts) – varied size & dimmer */
     .sticker{
       position:absolute;
-      width: clamp(18px, 3.8vw, 28px);
-      height: clamp(18px, 3.8vw, 28px);
-      opacity:.9;
+      width: calc(var(--sz,1) * clamp(22px, 4.2vw, 42px));
+      height: calc(var(--sz,1) * clamp(22px, 4.2vw, 42px));
+      opacity: var(--alpha, .38);            /* dimmer so content stays readable */
       transform: translate3d(0,0,0) scale(1);
       animation: bob var(--dur, 10s) ease-in-out infinite alternate;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+      filter: saturate(.9) brightness(.9) drop-shadow(0 2px 4px rgba(0,0,0,.35));
+      mix-blend-mode: normal;
     }
     .sticker svg{ width:100%; height:100%; display:block }
     @keyframes bob{
       from{ transform: translate3d(0,0,0) rotate(-6deg) }
-      to  { transform: translate3d(var(--dx, 12px), var(--dy, -18px), 0) rotate(6deg) }
+      to  { transform: translate3d(var(--dx, 14px), var(--dy, -20px), 0) rotate(6deg) }
     }
 
     @media (prefers-reduced-motion: reduce){
@@ -377,6 +378,12 @@
         <button class="pill" id="musicToggle" hidden aria-pressed="false" aria-label="Play or pause the birthday music">
           <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
         </button>
+
+        <!-- NEW: Slideshow autoplay toggle -->
+        <button class="pill" id="slideAutoToggle" aria-pressed="true" aria-label="Pause or play slideshow autoplay">
+          <span class="icon" aria-hidden="true">🖼️</span><span class="mini" id="slideAutoLabel">Slideshow: Pause</span>
+        </button>
+
         <button class="pill" id="shareBtn" aria-label="Share or copy link">
           <span class="icon" aria-hidden="true">🔗</span><span class="mini">Share / Copy link</span>
         </button>
@@ -387,6 +394,7 @@
     <section class="card video-card" aria-labelledby="vidTitle">
       <h2 id="vidTitle" style="margin:0; font-size: clamp(1.2rem, 4.2vw, 1.6rem)">A little birthday clip 🎬</h2>
       <video
+        id="video"
         src="assets/video.mp4"
         poster="assets/photo1.jpg"
         preload="metadata"
@@ -397,7 +405,7 @@
       >
         Sorry, your browser can’t play the embedded video.
       </video>
-      <p class="video-note">Tip: On mobile, rotate your phone for a bigger view.</p>
+      <p class="video-note">When the video plays the music pauses; when you pause the video the music resumes automatically.</p>
     </section>
   </main>
 
@@ -452,6 +460,8 @@
     const music         = $('#music');
     const musicToggle   = $('#musicToggle');
     const musicLabel    = $('#musicLabel');
+    const slideAutoBtn  = $('#slideAutoToggle');
+    const slideAutoLabel= $('#slideAutoLabel');
     const shareBtn      = $('#shareBtn');
     const toast         = $('#toast');
     const confettiCanvas= $('#confetti');
@@ -460,6 +470,7 @@
     const sr            = $('#sr');
     const nameEl        = $('#friendName');
     const yearEl        = $('#year');
+    const videoEl       = $('#video');
 
     const track = $('#track');
     const slides= $$('.slide');
@@ -472,6 +483,10 @@
        ------------------------------------------------------------ */
     let index = 0;
     let hasCelebrated = false;
+    let slideTimer = null;
+    let slideAuto = true;               // slideshow autoplay on by default
+    let musicWasPlayingBeforeVideo = false;
+
     yearEl.textContent = new Date().getFullYear();
     if(!nameEl.textContent.trim()){ nameEl.textContent = 'Friend'; }
 
@@ -482,7 +497,7 @@
     const prefersReducedData   = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
 
     /* ============================================================
-       SLIDESHOW LOGIC
+       SLIDESHOW LOGIC  (auto-play + manual controls)
        ============================================================ */
     function go(i, announce=true){
       index = (i + slides.length) % slides.length;
@@ -492,9 +507,38 @@
     }
     function nextSlide(){ go(index+1); }
     function prevSlide(){ go(index-1); }
-    next.addEventListener('click', nextSlide);
-    prev.addEventListener('click', prevSlide);
-    dots.forEach(d => d.addEventListener('click', ()=> go(+d.dataset.i)));
+
+    function startAuto(){
+      if(slideTimer) return;
+      slideAuto = true;
+      slideAutoBtn.setAttribute('aria-pressed', 'true');
+      slideAutoLabel.textContent = 'Slideshow: Pause';
+      slideTimer = setInterval(nextSlide, 3500); // auto-advance every ~3.5s
+    }
+    function stopAuto(){
+      slideAuto = false;
+      slideAutoBtn.setAttribute('aria-pressed', 'false');
+      slideAutoLabel.textContent = 'Slideshow: Play';
+      clearInterval(slideTimer);
+      slideTimer = null;
+    }
+    function toggleAuto(){ slideAuto ? stopAuto() : startAuto(); }
+
+    // Respect prefers-reduced-motion: do not auto-start
+    if(prefersReducedMotion()){ stopAuto(); }
+    else { startAuto(); }
+
+    next.addEventListener('click', ()=>{ nextSlide(); resetAutoKick(); });
+    prev.addEventListener('click', ()=>{ prevSlide(); resetAutoKick(); });
+    dots.forEach(d => d.addEventListener('click', ()=>{ go(+d.dataset.i); resetAutoKick(); }));
+
+    function resetAutoKick(){
+      if(!slideAuto) return;
+      clearInterval(slideTimer);
+      slideTimer = setInterval(nextSlide, 3500);
+    }
+
+    slideAutoBtn.addEventListener('click', toggleAuto);
 
     // Pointer/touch swipe
     (()=> {
@@ -506,7 +550,7 @@
         const x1 = (e.changedTouches?e.changedTouches[0].clientX:e.clientX);
         const dx = x1 - x0;
         const dt = Date.now()-t;
-        if(Math.abs(dx)>40 && dt<600){ dx<0 ? nextSlide() : prevSlide(); }
+        if(Math.abs(dx)>40 && dt<600){ dx<0 ? nextSlide() : prevSlide(); resetAutoKick(); }
         x0=null;
       };
       vp.addEventListener('pointerdown', onStart);
@@ -526,6 +570,13 @@
       musicLabel.textContent = playing ? 'Pause music' : 'Play music';
     }
     musicToggle.addEventListener('click', async ()=>{
+      // If video is currently playing, keep music muted per your rule
+      if(!videoEl.paused){
+        showToast('Music stays paused while video plays 📹');
+        if(!music.paused){ music.pause(); }
+        updateMusicUI();
+        return;
+      }
       try{
         if(music.paused){ await music.play(); }
         else { music.pause(); }
@@ -535,6 +586,25 @@
     });
     music.addEventListener('play', updateMusicUI);
     music.addEventListener('pause', updateMusicUI);
+
+    /* ============================================================
+       VIDEO ↔ MUSIC INTERACTION
+       - When video plays: pause music
+       - When video pauses/ends: resume music (only if it was playing)
+       ============================================================ */
+    videoEl.addEventListener('play', ()=>{
+      musicWasPlayingBeforeVideo = !music.paused;
+      if(musicWasPlayingBeforeVideo){ music.pause(); }
+      updateMusicUI();
+    });
+    function resumeMusicIfNeeded(){
+      if(hasCelebrated && musicWasPlayingBeforeVideo){
+        music.play().catch(()=>{ /* ignore */ });
+        updateMusicUI();
+      }
+    }
+    videoEl.addEventListener('pause', resumeMusicIfNeeded);
+    videoEl.addEventListener('ended', resumeMusicIfNeeded);
 
     /* ============================================================
        SHARE / COPY LINK
@@ -575,7 +645,7 @@
        - Confetti (single burst)
        - Balloons (linger longer)
        - Reveals Play/Pause button
-       - Spawns cute stickers around edges
+       - Spawns MORE & BIGGER stickers in varied sizes (dimmer)
        ============================================================ */
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
@@ -601,8 +671,8 @@
 
       if(!prefersReducedData()){
         confettiBurst();
-        spawnBalloons(24);      // longer duration via CSS + cleanup timer
-        spawnStickers(14);      // cute, tiny, around edges
+        spawnBalloons(26);      // longer duration via CSS + cleanup timer
+        spawnStickers(28);      // MORE, BIGGER, varied sizes, dimmer, edge-only
       }else{
         showToast('Effects reduced to save data.');
       }
@@ -690,7 +760,7 @@
     }
 
     /* ============================================================
-       STICKERS (kitties, paws, hearts) – tiny & edge-only
+       STICKERS (kitties, paws, MORE hearts) – bigger, varied sizes, dimmer, edge-only
        ============================================================ */
     const STICKERS = [
       // Cute cat head
@@ -710,27 +780,44 @@
          <circle cx="46" cy="28" r="6" fill="#b784ff"/><circle cx="26" cy="22" r="5" fill="#b784ff"/><circle cx="38" cy="22" r="5" fill="#b784ff"/>
          <path d="M22 40c6 4 14 4 20 0" stroke="#2a0f22" stroke-opacity=".25"/>
        </svg>`,
-      // Sparkly heart
+      // Sparkly heart (larger)
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M32 54s-14-9-20-16C6 32 6 22 14 18c6-3 12 0 14 4 2-4 8-7 14-4 8 4 8 14 2 20-6 7-20 16-20 16z" fill="#ff8bd2" />
          <path d="M20 16l2-4m4 2l2-4" stroke="#ffd7ef" stroke-linecap="round"/>
+       </svg>`,
+      // Heart variant 2
+      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+         <path d="M12 28c0-7 6-12 12-12 5 0 8 2 8 5s3-5 10-5c8 0 14 7 12 16-3 12-18 21-22 24-4-3-20-12-22-24z" fill="#ffa1d9"/>
+       </svg>`,
+      // Tiny heart outline
+      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+         <path d="M32 50C14 38 10 32 10 24c0-6 5-10 10-10 6 0 10 6 12 8 2-2 6-8 12-8 5 0 10 4 10 10 0 8-4 14-22 26z" fill="none" stroke="#ffb3e6" stroke-width="3"/>
        </svg>`
     ];
 
-    function spawnStickers(count=12){
+    function spawnStickers(count=20){
       const W = window.innerWidth, H = window.innerHeight;
-      const centerBox = { x1: W*0.2, y1: H*0.2, x2: W*0.8, y2: H*0.8 }; // avoid the middle
+      const centerBox = { x1: W*0.22, y1: H*0.22, x2: W*0.78, y2: H*0.78 }; // avoid the middle
 
       for(let i=0;i<count;i++){
         const el = document.createElement('div');
         el.className = 'sticker';
-        el.innerHTML = STICKERS[Math.floor(Math.random()*STICKERS.length)];
+
+        // Weight hearts higher probability (~60%)
+        const r = Math.random();
+        if(r < 0.6){
+          // pick one of the heart variants (2/3/4)
+          const heartIdx = 2 + Math.floor(Math.random()*3);
+          el.innerHTML = STICKERS[heartIdx];
+        }else{
+          el.innerHTML = STICKERS[Math.floor(Math.random()*2)]; // cat or paw
+        }
 
         // Random edge-ish position
         let x = Math.random()*W;
         let y = Math.random()*H;
 
-        // If inside the center box, push it toward nearest edge
+        // Push away from center content area
         if(x>centerBox.x1 && x<centerBox.x2 && y>centerBox.y1 && y<centerBox.y2){
           const toLeft   = x - centerBox.x1;
           const toRight  = centerBox.x2 - x;
@@ -743,13 +830,17 @@
           else y = centerBox.y2 + 16;
         }
 
-        el.style.left = Math.max(4, Math.min(W-28, x)) + 'px';
-        el.style.top  = Math.max(4, Math.min(H-28, y)) + 'px';
+        // Size, opacity, and motion variance
+        const sizeFactor = (Math.random()*1.2 + 0.6).toFixed(2);     // 0.6x .. 1.8x
+        const alpha      = (Math.random()*0.18 + 0.28).toFixed(2);    // 0.28 .. 0.46 (dimmer)
+        const dx         = (Math.random()*24+12) * (Math.random()<0.5?-1:1);
+        const dy         = -(Math.random()*26+14);
+        const dur        = (Math.random()*6+9).toFixed(2) + 's';
 
-        // Gentle bobble amounts & durations
-        const dx = (Math.random()*20+8) * (Math.random()<0.5?-1:1);
-        const dy = -(Math.random()*22+10);
-        const dur= (Math.random()*6+9).toFixed(2) + 's';
+        el.style.left = Math.max(4, Math.min(W-42, x)) + 'px';
+        el.style.top  = Math.max(4, Math.min(H-42, y)) + 'px';
+        el.style.setProperty('--sz', sizeFactor);
+        el.style.setProperty('--alpha', alpha);
         el.style.setProperty('--dx', dx+'px');
         el.style.setProperty('--dy', dy+'px');
         el.style.setProperty('--dur', dur);
@@ -762,8 +853,8 @@
        KEYBOARD SHORTCUTS
        ============================================================ */
     window.addEventListener('keydown', (e)=>{
-      if(e.key === 'ArrowRight') nextSlide();
-      if(e.key === 'ArrowLeft')  prevSlide();
+      if(e.key === 'ArrowRight') { nextSlide(); resetAutoKick(); }
+      if(e.key === 'ArrowLeft')  { prevSlide(); resetAutoKick(); }
       if((e.key === ' ' || e.key === 'k') && !e.target.closest('button, a, input, textarea')){
         e.preventDefault();
         if(!musicToggle.hasAttribute('hidden')) musicToggle.click();
@@ -772,6 +863,106 @@
 
     // Init first slide
     go(0, false);
+
+    /* ============================================================
+       START HELPERS (celebration bundle)
+       ============================================================ */
+    function confettiBurst(){ /* (exact same as above) */ }
+    // --- Re-define with actual body from earlier to keep code compact in comments ---
+    {
+      const old = confettiBurst;
+      confettiBurst = function(){
+        const ctx = confettiCanvas.getContext('2d');
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const {innerWidth: W, innerHeight: H} = window;
+        confettiCanvas.width = Math.floor(W * dpr);
+        confettiCanvas.height = Math.floor(H * dpr);
+        confettiCanvas.style.width = W + 'px';
+        confettiCanvas.style.height = H + 'px';
+        ctx.scale(dpr, dpr);
+        const n = 150;
+        const colors = ['#ffd7ef','#b784ff','#ff8bd2','#ffb3e1','#e1c6ff','#ffcadf','#dcb2ff'];
+        const parts = Array.from({length:n}, ()=>({
+          x: W/2, y: H*0.35,
+          vx: (Math.random()*2-1)*7,
+          vy: (Math.random()*-1-0.8)*10,
+          w: Math.random()*8+5,
+          h: Math.random()*3+2,
+          rot: Math.random()*Math.PI,
+          vr: (Math.random()*2-1)*0.2,
+          col: colors[(Math.random()*colors.length)|0]
+        }));
+        const start = performance.now();
+        const grav = 0.25, air = 0.996;
+        function frame(t){
+          const elapsed = t - start;
+          ctx.clearRect(0,0,W,H);
+          for(const p of parts){
+            p.vy += grav;
+            p.vx *= air; p.vy *= air;
+            p.x += p.vx; p.y += p.vy;
+            p.rot += p.vr;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.col;
+            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+            ctx.restore();
+          }
+          if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
+          else ctx.clearRect(0,0,W,H);
+        }
+        requestAnimationFrame(frame);
+      }
+    }
+
+    function spawnBalloons(count=26){ /* already defined above */ }
+    // --- Re-define with actual body to keep comments orderly ---
+    {
+      const fn = spawnBalloons;
+      spawnBalloons = function(count=26){
+        const palette = [
+          'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
+        ];
+        const minDur = prefersReducedMotion()? 0.01 : 14;
+        const maxDur = prefersReducedMotion()? 0.02 : 22;
+        for(let i=0;i<count;i++){
+          const b = document.createElement('div');
+          b.className = 'balloon';
+          const clr = palette[Math.floor(Math.random()*palette.length)];
+          const left = Math.random()*100;
+          const drift = (Math.random()*2-1) * 90 + 'px';
+          b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
+          b.style.background = `radial-gradient(circle at 30% 30%, #fff6, transparent 35%), ${clr}`;
+          b.style.setProperty('--x', drift);
+          b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
+          b.style.animationDelay = (Math.random()*1.8) + 's';
+          balloonsLayer.appendChild(b);
+          const kill = () => b.remove();
+          b.addEventListener('animationend', kill);
+          setTimeout(kill, 32000);
+        }
+      }
+    }
+
+    function spawnStickers(count=28){ /* already defined above */ }
+
+    function celebrate(){
+      if(hasCelebrated) return;
+      hasCelebrated = true;
+
+      if(!prefersReducedData()){
+        confettiBurst();
+        spawnBalloons(26);
+        spawnStickers(28);
+      }else{
+        showToast('Effects reduced to save data.');
+      }
+    }
+
+    /* ============================================================
+       END IIFE
+       ============================================================ */
   })();
   </script>
 
