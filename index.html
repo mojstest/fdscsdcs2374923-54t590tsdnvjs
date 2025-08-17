@@ -15,15 +15,14 @@
 
   <style>
     /* =========================================================
-       THEME TOKENS  (// EDIT HERE: colors)
+       THEME TOKENS
        ========================================================= */
     :root{
-      /* Dark pink / purple vibe */
-      --accent: #ff4fa3;     /* EDIT HERE: primary accent */
-      --accent-2: #b784ff;   /* EDIT HERE: secondary accent */
+      --accent: #ff4fa3;
+      --accent-2: #b784ff;
 
-      --bg-1: #120616;       /* EDIT HERE: deep background */
-      --bg-2: #1b0c24;       /* EDIT HERE: gradient top */
+      --bg-1: #120616;
+      --bg-2: #1b0c24;
 
       --card: color-mix(in oklab, #000 70%, #fff 0%);
       --text: #f9eefd;
@@ -41,8 +40,8 @@
     /* =========================================================
        BASE / RESET
        ========================================================= */
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
+    *,*::before,*::after{ box-sizing:border-box }
+    html,body{ height:100% }
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
@@ -54,8 +53,11 @@
       line-height:1.45;
     }
     :focus-visible{ outline: 2px dashed var(--accent); outline-offset: 3px }
-    a,button,input,select,textarea{font:inherit}
-    button{cursor:pointer}
+    a,button,input,select,textarea{ font:inherit }
+    button{ cursor:pointer }
+    /* 🔧 IMPORTANT: UA stylesheet gives figure {margin: 1em 40px}. Kill it. */
+    figure{ margin:0 }
+    img{ display:block }
 
     /* =========================================================
        BACKGROUND FX (bokeh) + WALLPAPER
@@ -65,7 +67,7 @@
       position:fixed; inset:-10vmax;
       z-index:-1;
       background:
-        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 26%, transparent) 0 60%, transparent 61%),
+        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 26%, transparent) 0 60%, transparent 61%) ,
         radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 26%, transparent) 0 60%, transparent 61%),
         radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ff8bd2 32%, transparent) 0 60%, transparent 61%);
       filter: blur(12px);
@@ -79,10 +81,10 @@
     }
     @media (prefers-reduced-motion: reduce){ body::before{ animation: none; opacity:.18 } }
 
-    /* Wallpaper fills MOST of the background so gradients still peek through */
+    /* Wallpaper */
     #wallpaper{
       position: fixed;
-      inset: clamp(16px, 6vmin, 64px); /* leaves a margin */
+      inset: clamp(16px, 6vmin, 64px);
       z-index: -2;
       background-image: url("assets/wallpaper.jpg");
       background-size: cover;
@@ -152,16 +154,20 @@
     /* =========================================================
        SLIDESHOW / CAROUSEL
        ========================================================= */
-    .slideshow{ display:grid; grid-template-rows: auto auto; gap: 8px; padding: 8px; /* --ratio is customizable */ }
+    .slideshow{ display:grid; grid-template-rows: auto auto; gap: 8px; padding: 8px; /* set --ratio here if you want */ }
     .viewport{
       position:relative;
       border-radius: clamp(10px, 2vw, 14px);
       overflow:hidden;
-      aspect-ratio: var(--ratio, 4/3);    /* 👈 change shape by setting --ratio on .slideshow */
+      aspect-ratio: var(--ratio, 4/3); /* change to 16/9 etc. */
       background: #160a22;
       outline: 1px solid rgba(255,255,255,.08);
-      contain: layout paint;              /* smoother */
+      contain: layout paint; /* smoother */
     }
+
+    /* important: no spacing between items */
+    .slideshow .track{ gap:0 }
+    .slideshow .slide{ margin:0 }
 
     /* exact movement math via CSS vars */
     .track{
@@ -178,7 +184,8 @@
       position: relative;
     }
     .slide > img{
-      width:100%; height:100%; object-fit:cover; object-position:center; display:block;
+      width:100%; height:100%;
+      object-fit:cover; object-position:center; display:block;
       background:#0d0615;
     }
     .slide > img.contain{
@@ -209,7 +216,7 @@
     .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22); transform: scale(1.15); }
 
     /* =========================================================
-       UTILITY ROW (Play/Pause Music + Share + Slideshow Auto Toggle)
+       UTILITY ROW
        ========================================================= */
     .utility{ display:flex; flex-wrap:wrap; gap:8px; padding: var(--pad); justify-content:center; }
     .pill{
@@ -241,7 +248,7 @@
     }
 
     /* =========================================================
-       START OVERLAY (user gesture)
+       START OVERLAY
        ========================================================= */
     .overlay{
       position:fixed; inset:0; z-index: 9999; display:grid; place-items:center;
@@ -260,7 +267,7 @@
     .overlay-hint{ color:#f2dbff; font-size:.95rem }
 
     /* =========================================================
-       EFFECTS LAYERS (confetti + balloons + stickers)
+       EFFECTS LAYERS
        ========================================================= */
     #confetti{ position: fixed; inset:0; pointer-events:none; z-index: 9990 }
     #balloons{ position: fixed; inset:0; pointer-events:none; z-index: 9980; overflow:hidden }
@@ -426,17 +433,13 @@
 
   <script>
   /* ============================================================
-     SLIDESHOW HOW-TO (edit these without touching HTML) 💡
+     SLIDESHOW HOW-TO (edit these without touching HTML)
      ------------------------------------------------------------
-     - Add photos: update SLIDES (files live under ASSETS_DIR)
+     - Add photos: update SLIDES (files under ASSETS_DIR)
      - Aspect ratio box: set CSS var --ratio on .slideshow (e.g., 16/9)
-     - Autoplay:
-         AUTOPLAY = true|false; INTERVAL_MS = 3800;
-         Users with prefers-reduced-motion start paused regardless.
-     - Contain/Cover thresholds (auto 'contain' for extremes):
-         RATIO_CONTAIN_MIN = 0.90; RATIO_CONTAIN_MAX = 1.60;
-     - Format fallbacks if a URL 404s (order can be changed):
-         FALLBACK_EXTS = ['jpg','jpeg','png','webp','avif'];
+     - Autoplay: AUTOPLAY = true|false; INTERVAL_MS = 3800
+     - Contain/Cover thresholds: RATIO_CONTAIN_MIN / RATIO_CONTAIN_MAX
+     - Format fallbacks on 404: FALLBACK_EXTS order
      ============================================================ */
 
   (function(){
@@ -452,11 +455,11 @@
       "photo4.jpg",
       "photo5.jpg",
       "photo6.jpg",
-      "photo7.jpg",
-      // add more...
+      "photo7.jpg"
+      // add more…
     ];
 
-    let AUTOPLAY    = true;     // default; will be disabled if prefers-reduced-motion
+    let AUTOPLAY    = true;     // will auto-disable if prefers-reduced-motion
     let INTERVAL_MS = 3800;
 
     const RATIO_CONTAIN_MIN = 0.90;
@@ -500,24 +503,29 @@
     yearEl.textContent = new Date().getFullYear();
     if(!nameEl.textContent.trim()){ nameEl.textContent = 'Friend'; }
 
-    // Respect reduced motion for autoplay
     if (prefersReducedMotion()) AUTOPLAY = false;
 
     /* ============================================================
        Build Slides from SLIDES[]
        ============================================================ */
     function resolveSrc(name){
-      // allow absolute/remote or already-with-path strings
       if (/^https?:\/\//i.test(name) || name.startsWith('/') || name.includes('/')) return name;
       return ASSETS_DIR + name;
     }
+    const baseWithoutExt = (url)=> url.replace(/\.\w+(?=$|[#?])/,'');
+    const extFromUrl     = (url)=> (url.match(/\.([a-z0-9]+)(?=$|[#?])/i)||[])[1]?.toLowerCase() || '';
 
-    function baseWithoutExt(url){
-      return url.replace(/\.\w+(?=$|[#?])/,'');
-    }
-    function extFromUrl(url){
-      const m = url.match(/\.([a-z0-9]+)(?=$|[#?])/i);
-      return m ? m[1].toLowerCase() : '';
+    function setupImgFallback(img){
+      const tried = new Set();
+      const base = img.getAttribute('data-base') || baseWithoutExt(img.src);
+      const startExt = img.getAttribute('data-ext') || extFromUrl(img.src);
+      if (startExt) tried.add(startExt);
+      img.addEventListener('error', function onErr(){
+        const nextExt = FALLBACK_EXTS.find(ext => !tried.has(ext));
+        if (!nextExt){ img.removeEventListener('error', onErr); return; }
+        tried.add(nextExt);
+        img.src = `${base}.${nextExt}`;
+      });
     }
 
     function createSlide(i, src){
@@ -527,20 +535,15 @@
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.decoding = 'async';
-      // default intrinsic dimensions for better CLS behavior
-      img.width = 1600;
-      img.height = 1200;
+      img.width = 1600; img.height = 1200;
 
       const fullSrc = resolveSrc(src);
       img.src = fullSrc;
       img.alt = `Photo ${i+1}`;
       img.setAttribute('data-base', baseWithoutExt(fullSrc));
       img.setAttribute('data-ext', extFromUrl(fullSrc));
-
-      // format fallback on error
       setupImgFallback(img);
 
-      // contain/cover decision after load
       img.addEventListener('load', ()=>{
         const r = (img.naturalWidth || 1) / (img.naturalHeight || 1);
         if (r < RATIO_CONTAIN_MIN || r > RATIO_CONTAIN_MAX){
@@ -555,23 +558,6 @@
       fig.appendChild(img);
       fig.appendChild(cap);
       return fig;
-    }
-
-    function setupImgFallback(img){
-      const tried = new Set();
-      const base = img.getAttribute('data-base') || baseWithoutExt(img.src);
-      const startExt = img.getAttribute('data-ext') || extFromUrl(img.src);
-      if (startExt) tried.add(startExt);
-
-      img.addEventListener('error', function onErr(){
-        const nextExt = FALLBACK_EXTS.find(ext => !tried.has(ext));
-        if (!nextExt){
-          img.removeEventListener('error', onErr);
-          return;
-        }
-        tried.add(nextExt);
-        img.src = `${base}.${nextExt}`;
-      });
     }
 
     function renderSlides(){
@@ -820,7 +806,7 @@
           ctx.fillStyle = p.col; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
           ctx.restore();
         }
-        if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
+        if(elapsed < 1600 && !matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(frame);
         else ctx.clearRect(0,0,W,H);
       }
       requestAnimationFrame(frame);
@@ -833,8 +819,9 @@
       const palette = [
         'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
       ];
-      const minDur = prefersReducedMotion()? 0.01 : 14;
-      const maxDur = prefersReducedMotion()? 0.02 : 22;
+      const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const minDur = rm? 0.01 : 14;
+      const maxDur = rm? 0.02 : 22;
 
       for(let i=0;i<count;i++){
         const b = document.createElement('div');
@@ -930,7 +917,6 @@
        INIT
        ============================================================ */
     renderSlides();
-
   })();
   </script>
 
