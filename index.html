@@ -11,7 +11,6 @@
 
   <!-- Performance -->
   <link rel="preload" as="audio" href="assets/music.mp3" />
-  <!-- Optional: preload wallpaper for faster paint -->
   <link rel="preload" as="image" href="assets/photo7.jpg" />
 
   <style>
@@ -19,21 +18,22 @@
        THEME TOKENS  (// EDIT HERE: colors)
        ========================================================= */
     :root{
-      --accent: #ff7ac6;     /* EDIT HERE: primary accent */
-      --accent-2: #78f3ff;   /* EDIT HERE: secondary accent */
+      /* Dark pink / purple theme */
+      --accent: #ff4fa3;     /* EDIT HERE: primary accent */
+      --accent-2: #b784ff;   /* EDIT HERE: secondary accent */
 
-      --bg-1: #0b1020;       /* EDIT HERE: deep background */
-      --bg-2: #141b34;       /* EDIT HERE: gradient top */
-      --bg-3: #1d2a54;
+      --bg-1: #120616;       /* EDIT HERE: deep background */
+      --bg-2: #1b0c24;       /* EDIT HERE: gradient top */
+      --bg-3: #2a0f3a;
 
-      --card: color-mix(in oklab, #000 65%, #fff 0%);
-      --text: #f6f7fb;
-      --muted: #c6c9d4;
+      --card: color-mix(in oklab, #000 70%, #fff 0%);
+      --text: #f9eefd;
+      --muted: #dcc6e6;
 
       --radius-lg: 16px;
       --radius-md: 12px;
-      --shadow-1: 0 10px 30px rgba(0,0,0,.35);
-      --shadow-2: 0 6px 18px rgba(0,0,0,.28);
+      --shadow-1: 0 10px 30px rgba(0,0,0,.45);
+      --shadow-2: 0 6px 18px rgba(0,0,0,.32);
 
       --gap: clamp(12px, 2.8vw, 24px);
       --pad: clamp(12px, 2.5vw, 20px);
@@ -49,13 +49,12 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        /* deep gradient */
-        radial-gradient(40% 60% at 50% 110%, #0a0f22 0%, transparent 70%),
+        /* deep purple gradient base */
+        radial-gradient(40% 60% at 50% 110%, #0c0410 0%, transparent 70%),
         linear-gradient(180deg, var(--bg-2), var(--bg-1));
       overflow-x:hidden;
       line-height:1.45;
     }
-
     :focus-visible{ outline: 2px dashed var(--accent); outline-offset: 3px }
     a,button,input,select,textarea{font:inherit}
     button{cursor:pointer}
@@ -63,18 +62,16 @@
     /* =========================================================
        BACKGROUND FX (bokeh) + WALLPAPER
        ========================================================= */
-
-    /* Subtle animated bokeh dots (perf-friendly) - stays even with wallpaper */
     body::before{
       content:"";
       position:fixed; inset:-10vmax;
-      z-index:-1; /* above wallpaper, below content */
+      z-index:-1;
       background:
-        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 22%, transparent) 0 60%, transparent 61%) ,
-        radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 20%, transparent) 0 60%, transparent 61%),
-        radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ffd166 28%, transparent) 0 60%, transparent 61%);
+        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 26%, transparent) 0 60%, transparent 61%) ,
+        radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 26%, transparent) 0 60%, transparent 61%),
+        radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ff8bd2 32%, transparent) 0 60%, transparent 61%);
       filter: blur(12px);
-      opacity:.25;
+      opacity:.28;
       animation: drift 26s linear infinite;
       pointer-events:none;
     }
@@ -84,19 +81,18 @@
     }
     @media (prefers-reduced-motion: reduce){ body::before{ animation: none; opacity:.18 } }
 
-    /* Wallpaper that fills MOST of the background, not all */
-    /* Uses a fixed inset container so gradients remain visible around edges */
+    /* Wallpaper fills MOST of the background so gradients still peek through */
     #wallpaper{
       position: fixed;
-      inset: clamp(16px, 6vmin, 64px); /* leave a nice margin so background shows */
-      z-index: -2;                     /* below bokeh, above body background */
-      background-image: url("assets/photo7.jpg"); /* // EDIT HERE: choose preferred wallpaper photo */
+      inset: clamp(16px, 6vmin, 64px); /* leaves a margin */
+      z-index: -2;                     /* below bokeh, above base gradient */
+      background-image: url("assets/photo7.jpg"); /* // EDIT HERE: preferred wallpaper */
       background-size: cover;
       background-position: center;
       border-radius: clamp(12px, 3.2vw, 22px);
-      box-shadow: 0 40px 120px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
-      filter: saturate(1.05) contrast(1.06) brightness(.8);
-      opacity: .32;                    /* subtle so content stays readable */
+      box-shadow: 0 40px 120px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+      filter: saturate(1.05) contrast(1.06) brightness(.72);
+      opacity: .35;
       pointer-events: none;
     }
 
@@ -111,8 +107,8 @@
       display:inline-block;
       padding: 6px 10px;
       border-radius: 999px;
-      background-image: linear-gradient(180deg, #ffd3ec, #d8fff8);
-      color:#231826;
+      background-image: linear-gradient(180deg, #ffd7ef, #e7d8ff);
+      color:#2a1730;
       font-weight:600;
       box-shadow: var(--shadow-2);
       letter-spacing:.2px;
@@ -122,7 +118,7 @@
       font-size: clamp(2rem, 6.5vw, 4rem);
       line-height:1.05;
       letter-spacing:.5px;
-      text-shadow: 0 2px 0 rgba(0,0,0,.25);
+      text-shadow: 0 2px 0 rgba(0,0,0,.3);
     }
     .hero-sub{
       margin-top:.35rem;
@@ -152,7 +148,7 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-1);
       overflow: clip;
-      border: 1px solid color-mix(in oklab, #fff 6%, #000 94%);
+      border: 1px solid color-mix(in oklab, #fff 8%, #000 92%);
     }
 
     /* =========================================================
@@ -164,15 +160,15 @@
       border-radius: clamp(10px, 2vw, 14px);
       overflow:hidden;
       aspect-ratio: 4 / 3;
-      background: #0f1428;
-      outline: 1px solid rgba(255,255,255,.06);
+      background: #160a22;
+      outline: 1px solid rgba(255,255,255,.08);
     }
     .track{ display:flex; height:100%; will-change: transform; transition: transform .55s cubic-bezier(.22,.61,.36,1); }
     .slide{ flex:0 0 100%; height:100%; }
     .slide > img{ width:100%; height:100%; object-fit:cover; display:block; }
     .slide-caption{
       position:absolute; left:10px; bottom:10px;
-      background: color-mix(in oklab, #000 40%, var(--accent) 10%);
+      background: color-mix(in oklab, #000 42%, var(--accent) 12%);
       color:#fff; padding: 6px 10px; border-radius: 999px;
       font-size: clamp(.75rem, 2.4vw, .9rem);
       backdrop-filter: blur(6px);
@@ -181,23 +177,22 @@
     .btn{
       appearance:none; border: 0; padding: .6rem .9rem; border-radius: 12px;
       background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 86%, #fff 0%), color-mix(in oklab, var(--accent) 64%, #000 10%));
-      color:#1c0e16; font-weight: 700; letter-spacing:.2px;
-      box-shadow: 0 4px 14px rgba(255, 122, 198, .25);
+      color:#2a0f22; font-weight: 700; letter-spacing:.2px;
+      box-shadow: 0 4px 14px rgba(255, 79, 163, .3);
     }
-    .btn.secondary{ background: linear-gradient(180deg, #2b335a, #1b2348); color:#e8ecff; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+    .btn.secondary{ background: linear-gradient(180deg, #3a1b5a, #281342); color:#f0e7ff; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
     .dots{ display:flex; gap:6px; align-items:center; margin-inline: auto; }
-    .dot{ width:8px; height:8px; border-radius:999px; background:#49507d; opacity:.8; }
-    .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(120,243,255,.18) }
+    .dot{ width:8px; height:8px; border-radius:999px; background:#644b86; opacity:.9; }
+    .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22) }
 
     /* =========================================================
        UTILITY ROW (Play/Pause + Share)
-       - Music button is hidden until party starts (per your request)
        ========================================================= */
     .utility{ display:flex; flex-wrap:wrap; gap:8px; padding: var(--pad); justify-content:center; }
     .pill{
-      background: linear-gradient(180deg, #232a4a, #1a203e);
-      border:1px solid rgba(255,255,255,.08);
-      color:#e8ecff; border-radius: 999px; padding: .55rem .9rem;
+      background: linear-gradient(180deg, #2d1743, #1d0f2e);
+      border:1px solid rgba(255,255,255,.14);
+      color:#f4eaff; border-radius: 999px; padding: .55rem .9rem;
       display:inline-flex; align-items:center; gap:.5rem; box-shadow: var(--shadow-2);
     }
     .pill .mini{ font-size: .95rem }
@@ -210,7 +205,7 @@
     .video-card{ padding: var(--pad); display:grid; gap:10px; }
     video{
       width:100%; height:auto; border-radius: var(--radius-md); display:block;
-      box-shadow: var(--shadow-1); background:#0a0f22; outline: 1px solid rgba(255,255,255,.06);
+      box-shadow: var(--shadow-1); background:#10061a; outline: 1px solid rgba(255,255,255,.08);
     }
     .video-note{ color:var(--muted); font-size: .95rem }
 
@@ -228,24 +223,26 @@
     .overlay{
       position:fixed; inset:0; z-index: 9999; display:grid; place-items:center;
       background:
-        radial-gradient(60vmax 40vmax at 50% 30%, color-mix(in oklab, var(--accent) 5%, transparent) 0 70%, transparent),
-        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.65));
+        radial-gradient(60vmax 40vmax at 50% 30%, color-mix(in oklab, var(--accent) 7%, transparent) 0 70%, transparent),
+        linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.72));
       backdrop-filter: blur(2px);
     }
     .overlay-inner{ text-align:center; display:grid; gap: 12px; }
     .party-btn{
       font-size: clamp(1.05rem, 4.6vw, 1.35rem); padding: .9rem 1.3rem; border-radius: 14px; border:0;
-      color:#1a0e14; font-weight:800; letter-spacing:.3px;
-      background: conic-gradient(from 0deg, #ffe3f6, #d9fff9, #fff3c7, #ffe3f6);
-      box-shadow: 0 10px 28px rgba(255, 122, 198, .35);
+      color:#2a0f22; font-weight:800; letter-spacing:.3px;
+      background: conic-gradient(from 0deg, #ffd7ef, #e9d6ff, #ffd7ef);
+      box-shadow: 0 10px 28px rgba(255, 79, 163, .38);
     }
-    .overlay-hint{ color:#d6dbff; font-size:.95rem }
+    .overlay-hint{ color:#f2dbff; font-size:.95rem }
 
     /* =========================================================
-       EFFECTS LAYERS (confetti + balloons)
+       EFFECTS LAYERS (confetti + balloons + stickers)
        ========================================================= */
     #confetti{ position: fixed; inset:0; pointer-events:none; z-index: 9990 }
     #balloons{ position: fixed; inset:0; pointer-events:none; z-index: 9980; overflow:hidden }
+    #stickers{ position: fixed; inset:0; pointer-events:none; z-index: 9970; overflow:hidden }
+
     .balloon{
       position:absolute;
       width: clamp(20px, 4.6vw, 32px);
@@ -260,24 +257,43 @@
       content:"";
       position:absolute; left:50%; bottom:-40%;
       width:2px; height: 40%;
-      background: linear-gradient(180deg, #b6c1ff, #5d6bff);
+      background: linear-gradient(180deg, #f0d9ff, #b784ff);
       transform: translateX(-50%);
       opacity:.7;
     }
-    /* Longer on-screen time (per your request) */
     @keyframes rise{
       from{ transform: translateY(105vh) translateX(var(--x, 0)) rotate(-2deg) }
       to  { transform: translateY(-110px) translateX(calc(var(--x, 0) + 10px)) rotate(6deg) }
     }
-    @media (prefers-reduced-motion: reduce){ .balloon{ animation-duration: .001s } }
+
+    /* Cute floating stickers (cats, paws, hearts) */
+    .sticker{
+      position:absolute;
+      width: clamp(18px, 3.8vw, 28px);
+      height: clamp(18px, 3.8vw, 28px);
+      opacity:.9;
+      transform: translate3d(0,0,0) scale(1);
+      animation: bob var(--dur, 10s) ease-in-out infinite alternate;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+    }
+    .sticker svg{ width:100%; height:100%; display:block }
+    @keyframes bob{
+      from{ transform: translate3d(0,0,0) rotate(-6deg) }
+      to  { transform: translate3d(var(--dx, 12px), var(--dy, -18px), 0) rotate(6deg) }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .balloon{ animation-duration: .001s }
+      .sticker{ animation: none }
+    }
 
     /* =========================================================
        TOAST (copy/share feedback)
        ========================================================= */
     .toast{
       position: fixed; left:50%; bottom: 18px; transform: translateX(-50%);
-      background: #101736; color:#e8ecff; padding: .6rem .9rem; border-radius: 999px;
-      border:1px solid rgba(255,255,255,.08); box-shadow: var(--shadow-2);
+      background: #1e0f2b; color:#f6e9ff; padding: .6rem .9rem; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14); box-shadow: var(--shadow-2);
       opacity:0; translate: 0 6px; transition: opacity .25s, translate .25s; z-index: 99999;
     }
     .toast.show{ opacity:1; translate: 0 0 }
@@ -300,7 +316,7 @@
   <header aria-labelledby="title">
     <span class="hero-badge" aria-hidden="true">🎉 It’s Party Time</span>
     <h1 id="title">Happy Birthday <span id="friendName"> <!-- // EDIT HERE: your friend’s name -->Alex</span>! 🥳</h1>
-    <p class="hero-sub">Tap the button below to start the party — music, confetti & balloons will appear!</p>
+    <p class="hero-sub">Tap the button below to start the party — music, confetti, balloons & cute kitty stickers will appear!</p>
   </header>
 
   <!-- =========================================================
@@ -357,7 +373,7 @@
       </div>
 
       <div class="utility" role="group" aria-label="Utilities">
-        <!-- Music control is hidden until "Start Party" is tapped (per your request) -->
+        <!-- Music control appears automatically when party starts -->
         <button class="pill" id="musicToggle" hidden aria-pressed="false" aria-label="Play or pause the birthday music">
           <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
         </button>
@@ -398,7 +414,7 @@
   <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Start birthday celebration">
     <div class="overlay-inner">
       <button id="start" class="party-btn">💥 Tap to start the party!</button>
-      <div class="overlay-hint">Starts music, confetti & balloons. You’ll get a Play/Pause button too.</div>
+      <div class="overlay-hint">Starts music, confetti, balloons & kitty stickers. Also shows a Play/Pause button.</div>
     </div>
   </div>
 
@@ -407,6 +423,7 @@
        ========================================================= -->
   <canvas id="confetti" aria-hidden="true"></canvas>
   <div id="balloons" aria-hidden="true"></div>
+  <div id="stickers" aria-hidden="true"></div>
 
   <!-- =========================================================
        MEDIA
@@ -439,6 +456,7 @@
     const toast         = $('#toast');
     const confettiCanvas= $('#confetti');
     const balloonsLayer = $('#balloons');
+    const stickersLayer = $('#stickers');
     const sr            = $('#sr');
     const nameEl        = $('#friendName');
     const yearEl        = $('#year');
@@ -555,28 +573,22 @@
        START OVERLAY -> PARTY!
        - Plays music
        - Confetti (single burst)
-       - Balloons (linger longer, per request)
-       - Reveals Play/Pause button automatically and focuses it
+       - Balloons (linger longer)
+       - Reveals Play/Pause button
+       - Spawns cute stickers around edges
        ============================================================ */
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
 
-      // Start music (user gesture)
-      try{ await music.play(); }catch{}
-
-      // Reveal and focus Play/Pause button (per your request)
+      try{ await music.play(); }catch{} // gesture-compliant
       musicToggle.removeAttribute('hidden');
       updateMusicUI();
       setTimeout(()=> musicToggle.focus(), 60);
 
-      // Effects
       celebrate();
-
-      // Remove overlay
       overlay.remove();
     });
 
-    // Keyboard on overlay
     overlay.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter' || e.key === ' '){
         e.preventDefault(); startBtn.click();
@@ -588,8 +600,9 @@
       hasCelebrated = true;
 
       if(!prefersReducedData()){
-        confettiBurst();        // single burst
-        spawnBalloons(24);      // more balloons + longer duration
+        confettiBurst();
+        spawnBalloons(24);      // longer duration via CSS + cleanup timer
+        spawnStickers(14);      // cute, tiny, around edges
       }else{
         showToast('Effects reduced to save data.');
       }
@@ -609,7 +622,7 @@
       ctx.scale(dpr, dpr);
 
       const n = 150;
-      const colors = ['#ffd166','#06d6a0','#118ab2','#ef476f','#a78bfa','#fca5a5','#7dd3fc'];
+      const colors = ['#ffd7ef','#b784ff','#ff8bd2','#ffb3e1','#e1c6ff','#ffcadf','#dcb2ff'];
       const parts = Array.from({length:n}, ()=>({
         x: W/2, y: H*0.35,
         vx: (Math.random()*2-1)*7,
@@ -639,42 +652,109 @@
           ctx.restore();
         }
         if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
-        else ctx.clearRect(0,0,W,H); // cleanup after ~1.6s
+        else ctx.clearRect(0,0,W,H);
       }
       requestAnimationFrame(frame);
     }
 
     /* ============================================================
        BALLOONS (linger longer)
-       - Increased animation durations and cleanup time
        ============================================================ */
-    function spawnBalloons(count=72){
+    function spawnBalloons(count=20){
       const palette = [
         'hsl(330 95% 72%)', /* pink */
-        'hsl(193 95% 68%)', /* aqua */
-        'hsl(49 95% 65%)',  /* yellow */
-        'hsl(262 95% 78%)', /* purple */
-        'hsl(146 62% 61%)'  /* green */
+        'hsl(280 85% 75%)', /* purple */
+        'hsl(322 85% 72%)', /* rose */
+        'hsl(260 75% 70%)', /* violet */
+        'hsl(300 70% 72%)'  /* magenta */
       ];
-      // Longer screen time (per request)
-      const minDur = prefersReducedMotion()? 0.01 : 14;  // was 9
-      const maxDur = prefersReducedMotion()? 0.02 : 22;  // was 14
+      const minDur = prefersReducedMotion()? 0.01 : 14;
+      const maxDur = prefersReducedMotion()? 0.02 : 22;
 
       for(let i=0;i<count;i++){
         const b = document.createElement('div');
         b.className = 'balloon';
         const clr = palette[Math.floor(Math.random()*palette.length)];
         const left = Math.random()*100;
-        const drift = (Math.random()*2-1) * 90 + 'px'; // a bit more drift
+        const drift = (Math.random()*2-1) * 90 + 'px';
         b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
-        b.style.background = `radial-gradient(circle at 30% 30%, #fff8, transparent 35%), ${clr}`;
+        b.style.background = `radial-gradient(circle at 30% 30%, #fff6, transparent 35%), ${clr}`;
         b.style.setProperty('--x', drift);
         b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
         b.style.animationDelay = (Math.random()*1.8) + 's';
         balloonsLayer.appendChild(b);
         const kill = () => b.remove();
         b.addEventListener('animationend', kill);
-        setTimeout(kill, 32000); // increased cleanup timeout
+        setTimeout(kill, 32000);
+      }
+    }
+
+    /* ============================================================
+       STICKERS (kitties, paws, hearts) – tiny & edge-only
+       ============================================================ */
+    const STICKERS = [
+      // Cute cat head
+      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+         <defs>
+           <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+             <stop offset="0" stop-color="#ffd7ef"/><stop offset="1" stop-color="#ff8bd2"/>
+           </linearGradient>
+         </defs>
+         <path d="M10 26c0 14 10 24 22 24s22-10 22-24l4-12-10 5c-4-5-10-7-16-7s-12 2-16 7l-10-5 4 12z" fill="url(#g1)" stroke="#2a0f22" stroke-opacity=".25"/>
+         <circle cx="26" cy="34" r="3" fill="#2a0f22"/><circle cx="38" cy="34" r="3" fill="#2a0f22"/>
+         <path d="M28 42c3 2 5 2 8 0" stroke="#2a0f22" stroke-width="2" stroke-linecap="round" fill="none"/>
+       </svg>`,
+      // Paw
+      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+         <circle cx="32" cy="40" r="12" fill="#b784ff"/><circle cx="18" cy="28" r="6" fill="#b784ff"/>
+         <circle cx="46" cy="28" r="6" fill="#b784ff"/><circle cx="26" cy="22" r="5" fill="#b784ff"/><circle cx="38" cy="22" r="5" fill="#b784ff"/>
+         <path d="M22 40c6 4 14 4 20 0" stroke="#2a0f22" stroke-opacity=".25"/>
+       </svg>`,
+      // Sparkly heart
+      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+         <path d="M32 54s-14-9-20-16C6 32 6 22 14 18c6-3 12 0 14 4 2-4 8-7 14-4 8 4 8 14 2 20-6 7-20 16-20 16z" fill="#ff8bd2" />
+         <path d="M20 16l2-4m4 2l2-4" stroke="#ffd7ef" stroke-linecap="round"/>
+       </svg>`
+    ];
+
+    function spawnStickers(count=12){
+      const W = window.innerWidth, H = window.innerHeight;
+      const centerBox = { x1: W*0.2, y1: H*0.2, x2: W*0.8, y2: H*0.8 }; // avoid the middle
+
+      for(let i=0;i<count;i++){
+        const el = document.createElement('div');
+        el.className = 'sticker';
+        el.innerHTML = STICKERS[Math.floor(Math.random()*STICKERS.length)];
+
+        // Random edge-ish position
+        let x = Math.random()*W;
+        let y = Math.random()*H;
+
+        // If inside the center box, push it toward nearest edge
+        if(x>centerBox.x1 && x<centerBox.x2 && y>centerBox.y1 && y<centerBox.y2){
+          const toLeft   = x - centerBox.x1;
+          const toRight  = centerBox.x2 - x;
+          const toTop    = y - centerBox.y1;
+          const toBottom = centerBox.y2 - y;
+          const min = Math.min(toLeft,toRight,toTop,toBottom);
+          if(min===toLeft) x = centerBox.x1 - 16;
+          else if(min===toRight) x = centerBox.x2 + 16;
+          else if(min===toTop) y = centerBox.y1 - 16;
+          else y = centerBox.y2 + 16;
+        }
+
+        el.style.left = Math.max(4, Math.min(W-28, x)) + 'px';
+        el.style.top  = Math.max(4, Math.min(H-28, y)) + 'px';
+
+        // Gentle bobble amounts & durations
+        const dx = (Math.random()*20+8) * (Math.random()<0.5?-1:1);
+        const dy = -(Math.random()*22+10);
+        const dur= (Math.random()*6+9).toFixed(2) + 's';
+        el.style.setProperty('--dx', dx+'px');
+        el.style.setProperty('--dy', dy+'px');
+        el.style.setProperty('--dur', dur);
+
+        stickersLayer.appendChild(el);
       }
     }
 
@@ -690,7 +770,7 @@
       }
     });
 
-    // Init
+    // Init first slide
     go(0, false);
   })();
   </script>
