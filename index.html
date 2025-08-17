@@ -3,26 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>🎉 Happy Birthday! 🎂</title>
+  <title>🎉 Happy Birthday!</title>
 
   <!-- Keep it unlisted -->
   <meta name="robots" content="noindex,nofollow" />
 
-  <!-- Social preview (optional; replace URLs) -->
+  <!-- Social preview (optional; point to an existing image) -->
   <meta property="og:title" content="Happy Birthday!" />
   <meta property="og:description" content="A little birthday surprise 🎂🎈" />
   <meta property="og:image" content="assets/photo1.jpg" />
-  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0f172a" />
 
-  <!-- Helpful for faster audio start -->
+  <!-- Preload audio for quicker start -->
   <link rel="preload" href="assets/music.mp3" as="audio" />
 
   <style>
     :root{
+      /* ===== EDIT HERE: Accent colors ===== */
       --bg:#0f172a; --panel:#0b1020; --text:#e5e7eb; --muted:#94a3b8;
       --border:rgba(255,255,255,.09);
       --accent:#f59e0b; --accent2:#22d3ee; --accent3:#a78bfa;
+      --radius:20px;
     }
     *{ box-sizing:border-box }
     html,body{ height:100%; margin:0 }
@@ -33,104 +34,146 @@
         radial-gradient(1200px 800px at 70% -10%, #1f2937, var(--bg)),
         radial-gradient(900px 500px at 10% 120%, #11182700, #0b102000 40%);
       overflow-x:hidden;
+      line-height:1.5;
     }
-    .wrap{ max-width: 980px; margin:0 auto; padding:24px }
-    header{ text-align:center; margin-top:36px }
-    h1{ font-size: clamp(32px, 6vw, 64px); margin:0 0 8px }
-    .subtitle{ color:var(--muted); margin:0 0 20px }
+    .wrap{ max-width: 1000px; margin:0 auto; padding: clamp(16px, 3vw, 28px) }
+
+    header{ text-align:center; margin-top: clamp(16px, 3vw, 36px) }
+    h1{ font-size: clamp(32px, 7vw, 66px); margin:0 0 10px }
+    .subtitle{ color:var(--muted); margin:0 0 20px; font-size: clamp(14px, 2.5vw, 18px) }
 
     .btn{
       display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
       border-radius:999px; background:#1f2937; border:1px solid var(--border);
       color:var(--text); font-weight:600; text-decoration:none; cursor:pointer;
       box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      transition: transform .15s ease, background .2s ease;
     }
     .btn:hover{ transform: translateY(-1px) }
 
+    .row{ display:grid; gap: clamp(12px, 2.4vw, 20px) }
+    /* two columns from ~900px+ */
+    @media (min-width: 900px){
+      .row{ grid-template-columns: 1.15fr 1fr }
+    }
+
     .card{
       background: linear-gradient(180deg, var(--panel), #0f172a);
-      border:1px solid var(--border); border-radius:20px; padding:20px;
+      border:1px solid var(--border); border-radius: var(--radius); padding: clamp(16px, 2.6vw, 22px);
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    .hero{ display:grid; gap:20px; grid-template-columns: 1.2fr 1fr; align-items:center }
-    @media (max-width: 900px){ .hero{ grid-template-columns:1fr } }
 
-    .big{ font-size: clamp(20px, 2.1vw, 26px); line-height:1.65 }
+    .big{ font-size: clamp(18px, 2.1vw, 24px); line-height:1.65 }
     .accent{ color:var(--accent) }
+
+    .hero-img{
+      width:100%; border-radius: calc(var(--radius) - 4px);
+      border:1px solid var(--border); display:block; aspect-ratio: 4 / 3; object-fit: cover;
+    }
 
     .gallery{
       display:grid; gap:12px;
-      grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+      grid-template-columns: repeat(auto-fill, minmax(170px,1fr));
     }
     .gallery img, .gallery video{
-      width:100%; height:180px; object-fit:cover; border-radius:14px;
-      border:1px solid var(--border); background:#0b1020;
+      width:100%; height:180px; object-fit:cover;
+      border-radius:14px; border:1px solid var(--border); background:#0b1020;
     }
+    .gallery video{ height:auto; aspect-ratio: 16 / 9 }
 
+    footer{ text-align:center; color:var(--muted); margin: 32px 0 10px; font-size:14px }
+
+    /* Overlay to unlock audio on user gesture */
     .overlay{
       position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
       background:rgba(2,6,23,.92); backdrop-filter: blur(3px); z-index:50;
     }
-    .overlay-inner{ text-align:center }
+    .overlay-inner{ text-align:center; padding: 24px }
     .overlay .btn{ font-size:18px; padding:14px 18px }
 
-    /* balloons */
+    /* Balloons */
     .balloon{
       position:absolute; bottom:-120px; width:26px; height:34px;
       border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
-      background:var(--accent); opacity:.85; filter:blur(.2px);
+      background:var(--accent); opacity:.9; filter:blur(.2px);
       animation: floatUp 12s linear infinite;
+      will-change: transform;
     }
     .balloon:after{ content:""; position:absolute; left:50%; top:90%; width:2px; height:26px; background:#d1d5db; transform:translateX(-50%) }
     @keyframes floatUp{ to{ transform: translateY(-115vh) } }
 
+    /* Confetti canvas */
     canvas#confetti{ position:fixed; inset:0; pointer-events:none; z-index:30 }
-    footer{ text-align:center; color:var(--muted); margin: 32px 0 10px; font-size:14px }
+
+    /* Accessibility: reduce motion or data */
+    @media (prefers-reduced-motion: reduce){
+      .balloon{ display:none }
+    }
+    @media (prefers-reduced-data: reduce){
+      .balloon{ display:none }
+      video{ display:none } /* keep page light on data */
+    }
+
+    /* Focus visibility */
+    :focus-visible{ outline:3px solid var(--accent2); outline-offset:3px }
   </style>
 </head>
 <body>
-  <!-- confetti canvas -->
-  <canvas id="confetti"></canvas>
+  <canvas id="confetti" aria-hidden="true"></canvas>
 
-  <!-- start overlay to allow audio (autoplay policies) -->
+  <!-- Start overlay (required for audio policies) -->
   <div class="overlay" id="startOverlay" aria-modal="true" role="dialog">
     <div class="overlay-inner">
       <h1>Ready to celebrate? 🎉</h1>
       <p class="subtitle">Tap to start the music & confetti</p>
-      <button class="btn" id="startBtn">Start the party</button>
+      <button class="btn" id="startBtn" aria-label="Start the party">Start the party</button>
     </div>
   </div>
 
-  <!-- balloons -->
-  <div id="balloons"></div>
+  <!-- Balloons container -->
+  <div id="balloons" aria-hidden="true"></div>
 
   <div class="wrap">
     <header>
-      <h1>Happy Birthday, <span class="accent" id="friendName">My Friend</span>! 🎂</h1>
+      <h1>Happy Birthday, <span class="accent" id="friendName">Sarah</span>! 🎂</h1> <!-- ===== EDIT HERE: name -->
       <p class="subtitle">Wishing you a day filled with joy, laughter, and great memories.</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
-        <button class="btn" id="playPause">▶ Play music</button>
-        <a class="btn" id="copyLink" href="#">🔗 Copy link</a>
+        <button class="btn" id="playPause" aria-pressed="false">▶ Play music</button>
+        <a class="btn" id="shareBtn" href="#" aria-label="Share this page">🔗 Share</a>
+        <a class="btn" id="copyLink" href="#" aria-label="Copy link">📋 Copy link</a>
       </div>
     </header>
 
-    <section class="card hero" style="margin-top:20px">
-      <div>
+    <section class="row" style="margin-top: clamp(14px, 3vw, 24px)">
+      <div class="card">
         <p class="big">
           Here’s a little page made just for <span class="accent">you</span> — with photos,
           a short video, and your song. Scroll down and enjoy!
         </p>
       </div>
-      <img src="assets/photo1.jpg" alt="Birthday hero" style="width:100%; border-radius:16px; border:1px solid var(--border)">
+
+      <div class="card" aria-label="Featured photo">
+        <img class="hero-img"
+             src="assets/photo1.jpg"
+             alt="A favorite memory together"
+             width="1600" height="1200"
+             loading="eager" decoding="async" />
+      </div>
     </section>
 
-    <section class="card" style="margin-top:24px">
-      <h2 style="margin:0 0 10px">Memories 📸</h2>
+    <section class="card" style="margin-top: clamp(16px, 3vw, 26px)" aria-labelledby="memories">
+      <h2 id="memories" style="margin:0 0 10px">Memories 📸</h2>
       <div class="gallery">
-        <img src="assets/photo1.jpg" alt="Memory 1">
-        <img src="assets/photo2.jpg" alt="Memory 2">
-        <img src="assets/photo3.jpg" alt="Memory 3">
-        <video src="assets/video.mp4" controls playsinline preload="metadata"></video>
+        <img src="assets/photo1.jpg" alt="Memory 1"
+             width="1200" height="900" loading="lazy" decoding="async" />
+        <img src="assets/photo2.jpg" alt="Memory 2"
+             width="1200" height="900" loading="lazy" decoding="async" />
+        <img src="assets/photo3.jpg" alt="Memory 3"
+             width="1200" height="900" loading="lazy" decoding="async" />
+        <video src="assets/video.mp4"
+               poster="assets/photo2.jpg"
+               preload="metadata" playsinline controls
+               aria-label="Short birthday video"></video>
       </div>
     </section>
 
@@ -141,24 +184,21 @@
   <audio id="bgm" preload="auto" src="assets/music.mp3"></audio>
 
   <script>
-    // ===== Customize this =====
-    document.getElementById('friendName').textContent = 'Sarah'; // <-- your friend’s name
+    // ===== EDIT HERE: friend’s name =====
+    document.getElementById('friendName').textContent = 'Sarah';
 
-    // Copy link button
-    document.getElementById('copyLink').addEventListener('click', (e) => {
-      e.preventDefault();
-      navigator.clipboard.writeText(location.href).then(() => alert('Link copied!'));
-    });
-
-    // Audio controls + overlay
+    // Buttons
     const audio = document.getElementById('bgm');
     const playBtn = document.getElementById('playPause');
     const overlay = document.getElementById('startOverlay');
+    const shareBtn = document.getElementById('shareBtn');
+    const copyBtn = document.getElementById('copyLink');
 
     async function playMusic(){
       try{
         await audio.play();
         playBtn.textContent = '⏸ Pause music';
+        playBtn.setAttribute('aria-pressed','true');
         launchConfetti();
       }catch(err){
         console.warn('Autoplay blocked until user taps.', err);
@@ -166,16 +206,37 @@
     }
     playBtn.addEventListener('click', ()=>{
       if (audio.paused) playMusic();
-      else { audio.pause(); playBtn.textContent = '▶ Play music'; }
+      else {
+        audio.pause();
+        playBtn.textContent = '▶ Play music';
+        playBtn.setAttribute('aria-pressed','false');
+      }
     });
+
     document.getElementById('startBtn').addEventListener('click', async ()=>{
       overlay.style.display = 'none';
       spawnBalloons();
       await playMusic();
     });
 
+    // Share / copy
+    shareBtn.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      if (navigator.share){
+        try { await navigator.share({ title: document.title, url: location.href }); }
+        catch {}
+      } else {
+        copyLink();
+      }
+    });
+    copyBtn.addEventListener('click', (e)=>{ e.preventDefault(); copyLink(); });
+    function copyLink(){
+      navigator.clipboard.writeText(location.href).then(()=> alert('Link copied!'));
+    }
+
     // Balloons
     function spawnBalloons(){
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const wrap = document.getElementById('balloons');
       const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e'];
       for (let i=0;i<28;i++){
@@ -189,16 +250,17 @@
       }
     }
 
-    // Confetti
+    // Confetti (respect reduced-motion)
     const canvas = document.getElementById('confetti');
     const ctx = canvas.getContext('2d');
     let parts = [];
     function resize(){ canvas.width = innerWidth; canvas.height = innerHeight }
-    addEventListener('resize', resize); resize();
+    addEventListener('resize', resize, {passive:true}); resize();
 
     function launchConfetti(){
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e','#fde047'];
-      for (let i=0;i<200;i++){
+      for (let i=0;i<220;i++){
         parts.push({
           x: canvas.width/2, y: canvas.height/3,
           vx: (Math.random()*6-3), vy: (Math.random()*-8-2),
@@ -213,15 +275,14 @@
     }
     function tick(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      parts.forEach(p=>{
+      for (const p of parts){
         p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
         ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
         ctx.fillStyle = p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
         ctx.restore();
-      });
+      }
       if (parts.length) requestAnimationFrame(tick);
     }
   </script>
 </body>
 </html>
-
