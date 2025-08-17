@@ -1,288 +1,711 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🎉 Happy Birthday!</title>
-
-  <!-- Keep it unlisted -->
   <meta name="robots" content="noindex,nofollow" />
+  <title>🎂 Happy Birthday!</title>
 
-  <!-- Social preview (optional; point to an existing image) -->
-  <meta property="og:title" content="Happy Birthday!" />
-  <meta property="og:description" content="A little birthday surprise 🎂🎈" />
-  <meta property="og:image" content="assets/photo1.jpg" />
-  <meta name="theme-color" content="#0f172a" />
-
-  <!-- Preload audio for quicker start -->
-  <link rel="preload" href="assets/music.mp3" as="audio" />
+  <!-- Performance -->
+  <link rel="preload" as="audio" href="assets/music.mp3" />
 
   <style>
     :root{
-      /* ===== EDIT HERE: Accent colors ===== */
-      --bg:#0f172a; --panel:#0b1020; --text:#e5e7eb; --muted:#94a3b8;
-      --border:rgba(255,255,255,.09);
-      --accent:#f59e0b; --accent2:#22d3ee; --accent3:#a78bfa;
-      --radius:20px;
+      /* =======================
+         THEME TOKENS
+         ======================= */
+      /* // EDIT HERE: accent colors */
+      --accent: #ff7ac6;
+      --accent-2: #78f3ff;
+
+      /* // EDIT HERE: background colors */
+      --bg-1: #0b1020;  /* deep navy */
+      --bg-2: #141b34;  /* indigo */
+      --bg-3: #1d2a54;  /* blue */
+      --card: color-mix(in oklab, #000 65%, #fff 0%);
+
+      --text: #f6f7fb;
+      --muted: #c6c9d4;
+
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-1: 0 10px 30px rgba(0,0,0,.35);
+      --shadow-2: 0 6px 18px rgba(0,0,0,.28);
+
+      --ring: 2px dashed var(--accent);
+      --ring-offset: 3px;
+
+      --gap: clamp(12px, 2.8vw, 24px);
+      --pad: clamp(12px, 2.5vw, 20px);
     }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0 }
+
+    /* Reset-ish */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        radial-gradient(1200px 800px at 70% -10%, #1f2937, var(--bg)),
-        radial-gradient(900px 500px at 10% 120%, #11182700, #0b102000 40%);
+        radial-gradient(1200px 800px at 10% -10%, color-mix(in oklab, var(--accent) 20%, transparent) 0%, transparent 60%),
+        radial-gradient(1000px 700px at 110% 10%, color-mix(in oklab, var(--accent-2) 20%, transparent) 0%, transparent 60%),
+        radial-gradient(40% 60% at 50% 110%, #0a0f22 0%, transparent 70%),
+        linear-gradient(180deg, var(--bg-2), var(--bg-1));
       overflow-x:hidden;
-      line-height:1.5;
+      line-height:1.45;
     }
-    .wrap{ max-width: 1000px; margin:0 auto; padding: clamp(16px, 3vw, 28px) }
 
-    header{ text-align:center; margin-top: clamp(16px, 3vw, 36px) }
-    h1{ font-size: clamp(32px, 7vw, 66px); margin:0 0 10px }
-    .subtitle{ color:var(--muted); margin:0 0 20px; font-size: clamp(14px, 2.5vw, 18px) }
-
-    .btn{
-      display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
-      border-radius:999px; background:#1f2937; border:1px solid var(--border);
-      color:var(--text); font-weight:600; text-decoration:none; cursor:pointer;
-      box-shadow: 0 10px 24px rgba(0,0,0,.35);
-      transition: transform .15s ease, background .2s ease;
+    /* Subtle animated bokeh dots (perf-friendly) */
+    body::before{
+      content:"";
+      position:fixed; inset:-10vmax;
+      background:
+        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 22%, transparent) 0 60%, transparent 61%) ,
+        radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 20%, transparent) 0 60%, transparent 61%),
+        radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ffd166 28%, transparent) 0 60%, transparent 61%);
+      filter: blur(12px);
+      opacity:.25;
+      z-index:-1;
+      animation: drift 26s linear infinite;
     }
-    .btn:hover{ transform: translateY(-1px) }
+    @keyframes drift{
+      from{ transform: translate3d(-2%, -1%, 0) rotate(0deg) }
+      to  { transform: translate3d(2%, 1%, 0) rotate(1turn) }
+    }
+    @media (prefers-reduced-motion: reduce){
+      body::before{ animation: none; opacity:.18 }
+    }
 
-    .row{ display:grid; gap: clamp(12px, 2.4vw, 20px) }
-    /* two columns from ~900px+ */
-    @media (min-width: 900px){
-      .row{ grid-template-columns: 1.15fr 1fr }
+    a,button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+
+    :focus-visible{
+      outline: var(--ring);
+      outline-offset: var(--ring-offset);
+    }
+
+    /* Layout */
+    header{
+      text-align:center;
+      padding: clamp(16px, 4vw, 40px) var(--pad) 10px;
+    }
+    .hero-badge{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--accent) 18%, #111 60%);
+      box-shadow: var(--shadow-2);
+      color:#0b0d14;
+      font-weight:600;
+      letter-spacing:.2px;
+      color: #231826;
+      background-image: linear-gradient(180deg, #ffd3ec, #d8fff8);
+    }
+    h1{
+      margin: .5rem 0 0;
+      font-size: clamp(2rem, 6.5vw, 4rem);
+      line-height:1.05;
+      letter-spacing:.5px;
+      text-shadow: 0 2px 0 rgba(0,0,0,.25);
+    }
+    .hero-sub{
+      margin-top:.35rem;
+      font-size: clamp(1rem, 3.4vw, 1.3rem);
+      color:var(--muted);
+    }
+
+    main{
+      display:grid;
+      gap: var(--gap);
+      padding: 0 var(--pad) var(--pad);
+      grid-template-columns: 1fr;
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+    @media (min-width: 860px){
+      main{
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
     }
 
     .card{
-      background: linear-gradient(180deg, var(--panel), #0f172a);
-      border:1px solid var(--border); border-radius: var(--radius); padding: clamp(16px, 2.6vw, 22px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      background: color-mix(in oklab, var(--card), transparent 0%);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+      overflow: clip;
+      border: 1px solid color-mix(in oklab, #fff 6%, #000 94%);
     }
 
-    .big{ font-size: clamp(18px, 2.1vw, 24px); line-height:1.65 }
-    .accent{ color:var(--accent) }
-
-    .hero-img{
-      width:100%; border-radius: calc(var(--radius) - 4px);
-      border:1px solid var(--border); display:block; aspect-ratio: 4 / 3; object-fit: cover;
+    /* Slideshow */
+    .slideshow{
+      display:grid;
+      grid-template-rows: auto auto;
+      gap: 8px;
+      padding: 8px;
     }
-
-    .gallery{
-      display:grid; gap:12px;
-      grid-template-columns: repeat(auto-fill, minmax(170px,1fr));
+    .viewport{
+      position:relative;
+      border-radius: clamp(10px, 2vw, 14px);
+      overflow:hidden;
+      aspect-ratio: 4 / 3;
+      background: #0f1428;
+      outline: 1px solid rgba(255,255,255,.06);
     }
-    .gallery img, .gallery video{
-      width:100%; height:180px; object-fit:cover;
-      border-radius:14px; border:1px solid var(--border); background:#0b1020;
-    }
-    .gallery video{ height:auto; aspect-ratio: 16 / 9 }
-
-    footer{ text-align:center; color:var(--muted); margin: 32px 0 10px; font-size:14px }
-
-    /* Overlay to unlock audio on user gesture */
-    .overlay{
-      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-      background:rgba(2,6,23,.92); backdrop-filter: blur(3px); z-index:50;
-    }
-    .overlay-inner{ text-align:center; padding: 24px }
-    .overlay .btn{ font-size:18px; padding:14px 18px }
-
-    /* Balloons */
-    .balloon{
-      position:absolute; bottom:-120px; width:26px; height:34px;
-      border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
-      background:var(--accent); opacity:.9; filter:blur(.2px);
-      animation: floatUp 12s linear infinite;
+    .track{
+      display:flex;
+      height:100%;
       will-change: transform;
+      transition: transform .55s cubic-bezier(.22,.61,.36,1);
     }
-    .balloon:after{ content:""; position:absolute; left:50%; top:90%; width:2px; height:26px; background:#d1d5db; transform:translateX(-50%) }
-    @keyframes floatUp{ to{ transform: translateY(-115vh) } }
+    .slide{
+      flex:0 0 100%;
+      height:100%;
+    }
+    .slide > img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .slide-caption{
+      position:absolute;
+      left:10px; bottom:10px;
+      background: color-mix(in oklab, #000 40%, var(--accent) 10%);
+      color:#fff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: clamp(.75rem, 2.4vw, .9rem);
+      backdrop-filter: blur(6px);
+    }
 
-    /* Confetti canvas */
-    canvas#confetti{ position:fixed; inset:0; pointer-events:none; z-index:30 }
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      justify-content: space-between;
+      padding: 6px;
+    }
+    .btn{
+      appearance:none;
+      border: 0;
+      padding: .6rem .9rem;
+      border-radius: 12px;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 86%, #fff 0%), color-mix(in oklab, var(--accent) 64%, #000 10%));
+      color:#1c0e16;
+      font-weight: 700;
+      letter-spacing:.2px;
+      box-shadow: 0 4px 14px rgba(255, 122, 198, .25);
+    }
+    .btn.secondary{
+      background: linear-gradient(180deg, #2b335a, #1b2348);
+      color:#e8ecff;
+      box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    }
+    .dots{
+      display:flex; gap:6px; align-items:center; margin-inline: auto;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px; background:#49507d; opacity:.8;
+    }
+    .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(120,243,255,.18) }
 
-    /* Accessibility: reduce motion or data */
+    /* Utility row */
+    .utility{
+      display:flex; flex-wrap:wrap; gap:8px;
+      padding: var(--pad);
+      justify-content:center;
+    }
+    .pill{
+      background: linear-gradient(180deg, #232a4a, #1a203e);
+      border:1px solid rgba(255,255,255,.08);
+      color:#e8ecff;
+      border-radius: 999px;
+      padding: .55rem .9rem;
+      display:inline-flex; align-items:center; gap:.5rem;
+      box-shadow: var(--shadow-2);
+    }
+    .pill .mini{ font-size: .95rem }
+    .pill .icon{ filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)) }
+
+    /* Video card */
+    .video-card{
+      padding: var(--pad);
+      display:grid; gap:10px;
+    }
+    video{
+      width:100%;
+      height:auto;
+      border-radius: var(--radius-md);
+      display:block;
+      box-shadow: var(--shadow-1);
+      background:#0a0f22;
+      outline: 1px solid rgba(255,255,255,.06);
+    }
+    .video-note{ color:var(--muted); font-size: .95rem }
+
+    /* Footer */
+    footer{
+      text-align:center;
+      color: var(--muted);
+      padding: 20px var(--pad) 36px;
+      font-size: clamp(.9rem, 2.3vw, 1rem);
+    }
+
+    /* Fullscreen Start Overlay */
+    .overlay{
+      position:fixed; inset:0; z-index: 9999;
+      display:grid; place-items:center;
+      background:
+        radial-gradient(60vmax 40vmax at 50% 30%, color-mix(in oklab, var(--accent) 5%, transparent) 0 70%, transparent),
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.65));
+      backdrop-filter: blur(2px);
+    }
+    .overlay-inner{
+      text-align:center;
+      display:grid; gap: 12px;
+    }
+    .party-btn{
+      font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+      padding: .9rem 1.3rem;
+      border-radius: 14px;
+      border:0;
+      color:#1a0e14;
+      font-weight:800;
+      letter-spacing:.3px;
+      background:
+        conic-gradient(from 0deg, #ffe3f6, #d9fff9, #fff3c7, #ffe3f6);
+      box-shadow: 0 10px 28px rgba(255, 122, 198, .35);
+    }
+    .overlay-hint{ color:#d6dbff; font-size:.95rem }
+
+    /* Confetti canvas & balloons layer */
+    #confetti{ position: fixed; inset:0; pointer-events:none; z-index: 9990 }
+    #balloons{ position: fixed; inset:0; pointer-events:none; z-index: 9980; overflow:hidden }
+    .balloon{
+      position:absolute;
+      width: clamp(20px, 4.6vw, 32px);
+      height: clamp(28px, 7vw, 48px);
+      border-radius: 50% 50% 45% 45% / 55% 55% 45% 45%;
+      opacity:.92;
+      transform: translateY(100vh);
+      box-shadow: inset 0 -8px 18px rgba(0,0,0,.18);
+      animation: rise linear both;
+    }
+    .balloon::after{ /* little string */
+      content:"";
+      position:absolute; left:50%; bottom:-40%;
+      width:2px; height: 40%;
+      background: linear-gradient(180deg, #b6c1ff, #5d6bff);
+      transform: translateX(-50%);
+      opacity:.7;
+    }
+    @keyframes rise{
+      from{ transform: translateY(105vh) translateX(var(--x, 0)) rotate(-2deg) }
+      to  { transform: translateY(-110px) translateX(calc(var(--x, 0) + 10px)) rotate(6deg) }
+    }
     @media (prefers-reduced-motion: reduce){
-      .balloon{ display:none }
-    }
-    @media (prefers-reduced-data: reduce){
-      .balloon{ display:none }
-      video{ display:none } /* keep page light on data */
+      .balloon{ animation-duration: .001s }
     }
 
-    /* Focus visibility */
-    :focus-visible{ outline:3px solid var(--accent2); outline-offset:3px }
+    /* Toast */
+    .toast{
+      position: fixed; left:50%; bottom: 18px; transform: translateX(-50%);
+      background: #101736;
+      color:#e8ecff;
+      padding: .6rem .9rem;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow-2);
+      opacity:0; translate: 0 6px; transition: opacity .25s, translate .25s;
+      z-index: 99999;
+    }
+    .toast.show{ opacity:1; translate: 0 0 }
+
+    /* Respect data saver – visually indicate muted effects */
+    @media (prefers-reduced-data: reduce){
+      body::before{ opacity:.12 }
+    }
   </style>
 </head>
 <body>
-  <canvas id="confetti" aria-hidden="true"></canvas>
+  <header aria-labelledby="title">
+    <span class="hero-badge" aria-hidden="true">🎉 It’s Party Time</span>
+    <h1 id="title">Happy Birthday <span id="friendName"> <!-- // EDIT HERE: your friend’s name -->Alex</span>! 🥳</h1>
+    <p class="hero-sub">Wishing you laughter, cake, and all the good things. Tap the button below to start the party.</p>
+  </header>
 
-  <!-- Start overlay (required for audio policies) -->
-  <div class="overlay" id="startOverlay" aria-modal="true" role="dialog">
+  <main>
+    <!-- Slideshow / Carousel -->
+    <section class="card slideshow" aria-label="Photo slideshow">
+      <div class="viewport" aria-live="polite">
+        <div class="track" id="track" style="transform: translateX(0%)">
+          <figure class="slide">
+            <img src="assets/photo1.jpg" alt="Photo 1: A favorite birthday memory" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#1</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo2.jpg" alt="Photo 2: Smiles and fun times" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#2</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo3.jpg" alt="Photo 3: Friends celebrating together" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#3</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo4.jpg" alt="Photo 4: A cheerful birthday moment" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#4</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo5.jpg" alt="Photo 5: Making a wish" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#5</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo6.jpg" alt="Photo 6: More cake, more joy" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#6</figcaption>
+          </figure>
+          <figure class="slide">
+            <img src="assets/photo7.jpg" alt="Photo 7: The perfect celebration" width="1200" height="900" loading="lazy" decoding="async" />
+            <figcaption class="slide-caption">#7</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn secondary" id="prev" aria-label="Previous photo">⟵ Prev</button>
+        <div class="dots" role="tablist" aria-label="Slide indicators">
+          <span class="dot" data-i="0" aria-current="true" role="tab" aria-label="Photo 1"></span>
+          <span class="dot" data-i="1" role="tab" aria-label="Photo 2"></span>
+          <span class="dot" data-i="2" role="tab" aria-label="Photo 3"></span>
+          <span class="dot" data-i="3" role="tab" aria-label="Photo 4"></span>
+          <span class="dot" data-i="4" role="tab" aria-label="Photo 5"></span>
+          <span class="dot" data-i="5" role="tab" aria-label="Photo 6"></span>
+          <span class="dot" data-i="6" role="tab" aria-label="Photo 7"></span>
+        </div>
+        <button class="btn secondary" id="next" aria-label="Next photo">Next ⟶</button>
+      </div>
+
+      <div class="utility" role="group" aria-label="Utilities">
+        <button class="pill" id="musicToggle" aria-pressed="false" aria-label="Play or pause the birthday music">
+          <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
+        </button>
+        <button class="pill" id="shareBtn" aria-label="Share or copy link">
+          <span class="icon" aria-hidden="true">🔗</span><span class="mini">Share / Copy link</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Video -->
+    <section class="card video-card" aria-labelledby="vidTitle">
+      <h2 id="vidTitle" style="margin:0; font-size: clamp(1.2rem, 4.2vw, 1.6rem)">A little birthday clip 🎬</h2>
+      <video
+        src="assets/video.mp4"
+        poster="assets/photo1.jpg"
+        preload="metadata"
+        playsinline
+        controls
+        width="1280"
+        height="720"
+      >
+        Sorry, your browser can’t play the embedded video.
+      </video>
+      <p class="video-note">Tip: On mobile, rotate your phone for a bigger view.</p>
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> With love • Made for
+    <strong><span aria-hidden="true">🎂</span> <span class="sr-only">Birthday</span></strong> moments.
+  </footer>
+
+  <!-- Start overlay (required for user gesture to start audio) -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Start birthday celebration">
     <div class="overlay-inner">
-      <h1>Ready to celebrate? 🎉</h1>
-      <p class="subtitle">Tap to start the music & confetti</p>
-      <button class="btn" id="startBtn" aria-label="Start the party">Start the party</button>
+      <button id="start" class="party-btn">💥 Tap to start the party!</button>
+      <div class="overlay-hint">Starts music, confetti & balloons</div>
     </div>
   </div>
 
-  <!-- Balloons container -->
+  <!-- Effects layers -->
+  <canvas id="confetti" aria-hidden="true"></canvas>
   <div id="balloons" aria-hidden="true"></div>
 
-  <div class="wrap">
-    <header>
-      <h1>Happy Birthday, <span class="accent" id="friendName">Sarah</span>! 🎂</h1> <!-- ===== EDIT HERE: name -->
-      <p class="subtitle">Wishing you a day filled with joy, laughter, and great memories.</p>
-      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
-        <button class="btn" id="playPause" aria-pressed="false">▶ Play music</button>
-        <a class="btn" id="shareBtn" href="#" aria-label="Share this page">🔗 Share</a>
-        <a class="btn" id="copyLink" href="#" aria-label="Copy link">📋 Copy link</a>
-      </div>
-    </header>
+  <!-- Media -->
+  <audio id="music" src="assets/music.mp3" preload="none"></audio>
 
-    <section class="row" style="margin-top: clamp(14px, 3vw, 24px)">
-      <div class="card">
-        <p class="big">
-          Here’s a little page made just for <span class="accent">you</span> — with photos,
-          a short video, and your song. Scroll down and enjoy!
-        </p>
-      </div>
-
-      <div class="card" aria-label="Featured photo">
-        <img class="hero-img"
-             src="assets/photo1.jpg"
-             alt="A favorite memory together"
-             width="1600" height="1200"
-             loading="eager" decoding="async" />
-      </div>
-    </section>
-
-    <section class="card" style="margin-top: clamp(16px, 3vw, 26px)" aria-labelledby="memories">
-      <h2 id="memories" style="margin:0 0 10px">Memories 📸</h2>
-      <div class="gallery">
-        <img src="assets/photo1.jpg" alt="Memory 1"
-             width="1200" height="900" loading="lazy" decoding="async" />
-        <img src="assets/photo2.jpg" alt="Memory 2"
-             width="1200" height="900" loading="lazy" decoding="async" />
-        <img src="assets/photo3.jpg" alt="Memory 3"
-             width="1200" height="900" loading="lazy" decoding="async" />
-        <video src="assets/video.mp4"
-               poster="assets/photo2.jpg"
-               preload="metadata" playsinline controls
-               aria-label="Short birthday video"></video>
-      </div>
-    </section>
-
-    <footer>Made with ❤️ & confetti</footer>
-  </div>
-
-  <!-- Audio -->
-  <audio id="bgm" preload="auto" src="assets/music.mp3"></audio>
+  <!-- Live regions -->
+  <div id="sr" class="sr-only" aria-live="polite" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;">Ready</div>
+  <div id="toast" class="toast" role="status" aria-live="polite">Copied!</div>
 
   <script>
-    // ===== EDIT HERE: friend’s name =====
-    document.getElementById('friendName').textContent = 'Sarah';
+  (function(){
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    // Buttons
-    const audio = document.getElementById('bgm');
-    const playBtn = document.getElementById('playPause');
-    const overlay = document.getElementById('startOverlay');
-    const shareBtn = document.getElementById('shareBtn');
-    const copyBtn = document.getElementById('copyLink');
+    // Elements
+    const overlay = $('#overlay');
+    const startBtn = $('#start');
+    const music = $('#music');
+    const musicToggle = $('#musicToggle');
+    const musicLabel = $('#musicLabel');
+    const shareBtn = $('#shareBtn');
+    const toast = $('#toast');
+    const confettiCanvas = $('#confetti');
+    const balloonsLayer = $('#balloons');
+    const sr = $('#sr');
+    const nameEl = $('#friendName');
+    const yearEl = $('#year');
 
-    async function playMusic(){
+    // Slideshow state
+    const track = $('#track');
+    const slides = $$('.slide');
+    const dots = $$('.dot');
+    const prev = $('#prev');
+    const next = $('#next');
+
+    let index = 0;
+    let hasCelebrated = false;
+    yearEl.textContent = new Date().getFullYear();
+
+    // Accessibility: If name is empty, expose placeholder
+    if(!nameEl.textContent.trim()){ nameEl.textContent = 'Friend'; }
+
+    // Helpers
+    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedData = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
+
+    function go(i, announce=true){
+      index = (i + slides.length) % slides.length;
+      track.style.transform = `translateX(-${index*100}%)`;
+      dots.forEach((d, di)=> d.setAttribute('aria-current', di===index ? 'true' : 'false'));
+      if(announce){ sr.textContent = `Photo ${index+1} of ${slides.length}`; }
+    }
+    function nextSlide(){ go(index+1); }
+    function prevSlide(){ go(index-1); }
+
+    next.addEventListener('click', nextSlide);
+    prev.addEventListener('click', prevSlide);
+    dots.forEach(d => d.addEventListener('click', ()=> go(+d.dataset.i)));
+
+    // Pointer swipe
+    (()=> {
+      let x0=null, t=null;
+      const vp = $('.viewport');
+      const onStart = (e)=>{ x0=(e.touches?e.touches[0].clientX:e.clientX); t=Date.now(); };
+      const onMove  = (e)=>{ if(x0==null) return; };
+      const onEnd   = (e)=>{
+        if(x0==null) return;
+        const x1 = (e.changedTouches?e.changedTouches[0].clientX:e.clientX);
+        const dx = x1 - x0;
+        const dt = Date.now()-t;
+        if(Math.abs(dx)>40 && dt<600){ dx<0 ? nextSlide() : prevSlide(); }
+        x0=null;
+      };
+      vp.addEventListener('pointerdown', onStart);
+      vp.addEventListener('pointerup', onEnd);
+      vp.addEventListener('touchstart', onStart, {passive:true});
+      vp.addEventListener('touchend', onEnd);
+    })();
+
+    // Music controls
+    function updateMusicUI(){
+      const playing = !music.paused;
+      musicToggle.setAttribute('aria-pressed', String(playing));
+      musicLabel.textContent = playing ? 'Pause music' : 'Play music';
+    }
+    musicToggle.addEventListener('click', async ()=>{
       try{
-        await audio.play();
-        playBtn.textContent = '⏸ Pause music';
-        playBtn.setAttribute('aria-pressed','true');
-        launchConfetti();
+        if(music.paused){ await music.play(); }
+        else { music.pause(); }
       }catch(err){
-        console.warn('Autoplay blocked until user taps.', err);
+        showToast('Unable to play audio. Check device volume.');
+      }finally{ updateMusicUI(); }
+    });
+    music.addEventListener('play', updateMusicUI);
+    music.addEventListener('pause', updateMusicUI);
+
+    // Share / Copy
+    shareBtn.addEventListener('click', async ()=>{
+      const shareData = { title: document.title, text: '🎂 Join the birthday page!', url: location.href };
+      try{
+        if(navigator.share){
+          await navigator.share(shareData);
+        }else{
+          await navigator.clipboard.writeText(location.href);
+          showToast('Link copied to clipboard ✔️');
+        }
+      }catch(e){
+        try{
+          await navigator.clipboard.writeText(location.href);
+          showToast('Link copied to clipboard ✔️');
+        }catch{
+          showToast('Copy failed. Long-press the address bar to share.');
+        }
+      }
+    });
+
+    // Toast helper
+    let toastTimer = null;
+    function showToast(msg='Done'){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
+    }
+
+    // Overlay: start party (audio + confetti + balloons)
+    startBtn.addEventListener('click', async ()=>{
+      if(hasCelebrated) return;
+      try{
+        await music.play(); // user gesture compliant
+      }catch(e){
+        // If blocked, we still proceed with visuals and update UI to "Play"
+      }
+      updateMusicUI();
+      celebrate();
+      overlay.remove();
+    });
+
+    // Also allow Enter/Space on overlay
+    overlay.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault(); startBtn.click();
+      }
+    });
+
+    function celebrate(){
+      if(hasCelebrated) return;
+      hasCelebrated = true;
+
+      if(!prefersReducedData()){
+        confettiBurst();
+        spawnBalloons(18);
+      }else{
+        // Gentle fallback indicator for data-saver users
+        showToast('Effects reduced to save data.');
       }
     }
-    playBtn.addEventListener('click', ()=>{
-      if (audio.paused) playMusic();
-      else {
-        audio.pause();
-        playBtn.textContent = '▶ Play music';
-        playBtn.setAttribute('aria-pressed','false');
-      }
-    });
 
-    document.getElementById('startBtn').addEventListener('click', async ()=>{
-      overlay.style.display = 'none';
-      spawnBalloons();
-      await playMusic();
-    });
+    // =======================
+    // CONFETTI (single burst)
+    // =======================
+    function confettiBurst(){
+      const ctx = confettiCanvas.getContext('2d');
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const {innerWidth: W, innerHeight: H} = window;
+      confettiCanvas.width = Math.floor(W * dpr);
+      confettiCanvas.height = Math.floor(H * dpr);
+      confettiCanvas.style.width = W + 'px';
+      confettiCanvas.style.height = H + 'px';
+      ctx.scale(dpr, dpr);
 
-    // Share / copy
-    shareBtn.addEventListener('click', async (e)=>{
-      e.preventDefault();
-      if (navigator.share){
-        try { await navigator.share({ title: document.title, url: location.href }); }
-        catch {}
-      } else {
-        copyLink();
+      const n = 140;
+      const colors = ['#ffd166','#06d6a0','#118ab2','#ef476f','#a78bfa','#fca5a5','#7dd3fc'];
+      const parts = Array.from({length:n}, ()=>({
+        x: W/2, y: H*0.35,
+        vx: (Math.random()*2-1)*7,
+        vy: (Math.random()*-1-0.8)*10,
+        w: Math.random()*8+5,
+        h: Math.random()*3+2,
+        rot: Math.random()*Math.PI,
+        vr: (Math.random()*2-1)*0.2,
+        col: colors[(Math.random()*colors.length)|0],
+        ttl: 1200 + Math.random()*400
+      }));
+      const start = performance.now();
+      const grav = 0.25;
+      const air = 0.996;
+
+      function frame(t){
+        const elapsed = t - start;
+        ctx.clearRect(0,0,W,H);
+        for(const p of parts){
+          p.vy += grav;
+          p.vx *= air; p.vy *= air;
+          p.x += p.vx; p.y += p.vy;
+          p.rot += p.vr;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.col;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
+        }
+        if(elapsed < 1500 && !prefersReducedMotion()) requestAnimationFrame(frame);
+        else ctx.clearRect(0,0,W,H); // cleanup
       }
-    });
-    copyBtn.addEventListener('click', (e)=>{ e.preventDefault(); copyLink(); });
-    function copyLink(){
-      navigator.clipboard.writeText(location.href).then(()=> alert('Link copied!'));
+      requestAnimationFrame(frame);
+
+      window.addEventListener('resize', ()=>{ // keep canvas crisp
+        if(!hasCelebrated) return;
+        const {innerWidth: W2, innerHeight: H2} = window;
+        confettiCanvas.width = Math.floor(W2 * dpr);
+        confettiCanvas.height = Math.floor(H2 * dpr);
+        confettiCanvas.style.width = W2 + 'px';
+        confettiCanvas.style.height = H2 + 'px';
+        ctx.scale(dpr, dpr);
+      }, {once:true});
     }
 
-    // Balloons
-    function spawnBalloons(){
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const wrap = document.getElementById('balloons');
-      const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e'];
-      for (let i=0;i<28;i++){
+    // =======================
+    // BALLOONS
+    // =======================
+    function spawnBalloons(count=16){
+      const palette = [
+        'hsl(330 95% 72%)', /* pink */
+        'hsl(193 95% 68%)', /* aqua */
+        'hsl(49 95% 65%)',  /* yellow */
+        'hsl(262 95% 78%)', /* purple */
+        'hsl(146 62% 61%)'  /* green */
+      ];
+      const minDur = prefersReducedMotion()? 0.01 : 9;
+      const maxDur = prefersReducedMotion()? 0.02 : 14;
+
+      for(let i=0;i<count;i++){
         const b = document.createElement('div');
-        b.className='balloon';
-        b.style.left = (Math.random()*100) + 'vw';
-        b.style.background = colors[i%colors.length];
-        b.style.animationDelay = (Math.random()*6)+'s';
-        b.style.animationDuration = (8 + Math.random()*10)+'s';
-        wrap.appendChild(b);
+        b.className = 'balloon';
+        const clr = palette[Math.floor(Math.random()*palette.length)];
+        const left = Math.random()*100;
+        const drift = (Math.random()*2-1) * 80 + 'px';
+        b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
+        b.style.background = `radial-gradient(circle at 30% 30%, #fff8, transparent 35%), ${clr}`;
+        b.style.setProperty('--x', drift);
+        b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
+        b.style.animationDelay = (Math.random()*1.5) + 's';
+        balloonsLayer.appendChild(b);
+        // Clean up after one pass
+        const kill = () => b.remove();
+        b.addEventListener('animationend', kill);
+        // Safety cleanup
+        setTimeout(kill, 18000);
       }
     }
 
-    // Confetti (respect reduced-motion)
-    const canvas = document.getElementById('confetti');
-    const ctx = canvas.getContext('2d');
-    let parts = [];
-    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight }
-    addEventListener('resize', resize, {passive:true}); resize();
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowRight') nextSlide();
+      if(e.key === 'ArrowLeft') prevSlide();
+      if((e.key === ' ' || e.key === 'k') && !e.target.closest('button, a, input, textarea')){
+        e.preventDefault();
+        musicToggle.click();
+      }
+    });
 
-    function launchConfetti(){
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e','#fde047'];
-      for (let i=0;i<220;i++){
-        parts.push({
-          x: canvas.width/2, y: canvas.height/3,
-          vx: (Math.random()*6-3), vy: (Math.random()*-8-2),
-          g: 0.15 + Math.random()*0.15,
-          size: 4 + Math.random()*4,
-          color: colors[Math.floor(Math.random()*colors.length)],
-          rot: Math.random()*6.28, vr: Math.random()*0.2-0.1
-        });
-      }
-      requestAnimationFrame(tick);
-      setTimeout(()=>{ parts=[]; }, 6500);
-    }
-    function tick(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      for (const p of parts){
-        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
-        ctx.fillStyle = p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
-        ctx.restore();
-      }
-      if (parts.length) requestAnimationFrame(tick);
-    }
+    // Initial slide
+    go(0, false);
+
+    // Nice: if the user switches tabs, we don’t blare music on return
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden) { /* keep state, no forced pause */ }
+    });
+  })();
   </script>
+
+  <!-- =======================
+       QUICK EDIT HELP
+       =======================
+       // EDIT HERE (friend’s name): search for id="friendName" above
+       // EDIT HERE (accent colors): change --accent / --accent-2 in :root
+       // EDIT HERE (background): tweak --bg-1..3 and the gradients in <body> styles
+  -->
 </body>
 </html>
