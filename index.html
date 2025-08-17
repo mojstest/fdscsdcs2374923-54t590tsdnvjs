@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- =========================================================
+       META / HEAD
+       ========================================================= -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
@@ -8,22 +11,22 @@
 
   <!-- Performance -->
   <link rel="preload" as="audio" href="assets/music.mp3" />
+  <!-- Optional: preload wallpaper for faster paint -->
+  <link rel="preload" as="image" href="assets/photo7.jpg" />
 
   <style>
+    /* =========================================================
+       THEME TOKENS  (// EDIT HERE: colors)
+       ========================================================= */
     :root{
-      /* =======================
-         THEME TOKENS
-         ======================= */
-      /* // EDIT HERE: accent colors */
-      --accent: #ff7ac6;
-      --accent-2: #78f3ff;
+      --accent: #ff7ac6;     /* EDIT HERE: primary accent */
+      --accent-2: #78f3ff;   /* EDIT HERE: secondary accent */
 
-      /* // EDIT HERE: background colors */
-      --bg-1: #0b1020;  /* deep navy */
-      --bg-2: #141b34;  /* indigo */
-      --bg-3: #1d2a54;  /* blue */
+      --bg-1: #0b1020;       /* EDIT HERE: deep background */
+      --bg-2: #141b34;       /* EDIT HERE: gradient top */
+      --bg-3: #1d2a54;
+
       --card: color-mix(in oklab, #000 65%, #fff 0%);
-
       --text: #f6f7fb;
       --muted: #c6c9d4;
 
@@ -32,14 +35,13 @@
       --shadow-1: 0 10px 30px rgba(0,0,0,.35);
       --shadow-2: 0 6px 18px rgba(0,0,0,.28);
 
-      --ring: 2px dashed var(--accent);
-      --ring-offset: 3px;
-
       --gap: clamp(12px, 2.8vw, 24px);
       --pad: clamp(12px, 2.5vw, 20px);
     }
 
-    /* Reset-ish */
+    /* =========================================================
+       BASE / RESET
+       ========================================================= */
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -47,44 +49,60 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        radial-gradient(1200px 800px at 10% -10%, color-mix(in oklab, var(--accent) 20%, transparent) 0%, transparent 60%),
-        radial-gradient(1000px 700px at 110% 10%, color-mix(in oklab, var(--accent-2) 20%, transparent) 0%, transparent 60%),
+        /* deep gradient */
         radial-gradient(40% 60% at 50% 110%, #0a0f22 0%, transparent 70%),
         linear-gradient(180deg, var(--bg-2), var(--bg-1));
       overflow-x:hidden;
       line-height:1.45;
     }
 
-    /* Subtle animated bokeh dots (perf-friendly) */
+    :focus-visible{ outline: 2px dashed var(--accent); outline-offset: 3px }
+    a,button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+
+    /* =========================================================
+       BACKGROUND FX (bokeh) + WALLPAPER
+       ========================================================= */
+
+    /* Subtle animated bokeh dots (perf-friendly) - stays even with wallpaper */
     body::before{
       content:"";
       position:fixed; inset:-10vmax;
+      z-index:-1; /* above wallpaper, below content */
       background:
         radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 22%, transparent) 0 60%, transparent 61%) ,
         radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 20%, transparent) 0 60%, transparent 61%),
         radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ffd166 28%, transparent) 0 60%, transparent 61%);
       filter: blur(12px);
       opacity:.25;
-      z-index:-1;
       animation: drift 26s linear infinite;
+      pointer-events:none;
     }
     @keyframes drift{
       from{ transform: translate3d(-2%, -1%, 0) rotate(0deg) }
       to  { transform: translate3d(2%, 1%, 0) rotate(1turn) }
     }
-    @media (prefers-reduced-motion: reduce){
-      body::before{ animation: none; opacity:.18 }
+    @media (prefers-reduced-motion: reduce){ body::before{ animation: none; opacity:.18 } }
+
+    /* Wallpaper that fills MOST of the background, not all */
+    /* Uses a fixed inset container so gradients remain visible around edges */
+    #wallpaper{
+      position: fixed;
+      inset: clamp(16px, 6vmin, 64px); /* leave a nice margin so background shows */
+      z-index: -2;                     /* below bokeh, above body background */
+      background-image: url("assets/photo7.jpg"); /* // EDIT HERE: choose preferred wallpaper photo */
+      background-size: cover;
+      background-position: center;
+      border-radius: clamp(12px, 3.2vw, 22px);
+      box-shadow: 0 40px 120px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
+      filter: saturate(1.05) contrast(1.06) brightness(.8);
+      opacity: .32;                    /* subtle so content stays readable */
+      pointer-events: none;
     }
 
-    a,button,input,select,textarea{font:inherit}
-    button{cursor:pointer}
-
-    :focus-visible{
-      outline: var(--ring);
-      outline-offset: var(--ring-offset);
-    }
-
-    /* Layout */
+    /* =========================================================
+       HEADER / HERO
+       ========================================================= */
     header{
       text-align:center;
       padding: clamp(16px, 4vw, 40px) var(--pad) 10px;
@@ -93,13 +111,11 @@
       display:inline-block;
       padding: 6px 10px;
       border-radius: 999px;
-      background: color-mix(in oklab, var(--accent) 18%, #111 60%);
-      box-shadow: var(--shadow-2);
-      color:#0b0d14;
-      font-weight:600;
-      letter-spacing:.2px;
-      color: #231826;
       background-image: linear-gradient(180deg, #ffd3ec, #d8fff8);
+      color:#231826;
+      font-weight:600;
+      box-shadow: var(--shadow-2);
+      letter-spacing:.2px;
     }
     h1{
       margin: .5rem 0 0;
@@ -114,6 +130,9 @@
       color:var(--muted);
     }
 
+    /* =========================================================
+       LAYOUT
+       ========================================================= */
     main{
       display:grid;
       gap: var(--gap);
@@ -121,12 +140,11 @@
       grid-template-columns: 1fr;
       max-width: 1160px;
       margin: 0 auto;
+      position: relative;
+      z-index: 0;
     }
     @media (min-width: 860px){
-      main{
-        grid-template-columns: 1fr 1fr;
-        align-items: start;
-      }
+      main{ grid-template-columns: 1fr 1fr; align-items: start; }
     }
 
     .card{
@@ -137,13 +155,10 @@
       border: 1px solid color-mix(in oklab, #fff 6%, #000 94%);
     }
 
-    /* Slideshow */
-    .slideshow{
-      display:grid;
-      grid-template-rows: auto auto;
-      gap: 8px;
-      padding: 8px;
-    }
+    /* =========================================================
+       SLIDESHOW / CAROUSEL
+       ========================================================= */
+    .slideshow{ display:grid; grid-template-rows: auto auto; gap: 8px; padding: 8px; }
     .viewport{
       position:relative;
       border-radius: clamp(10px, 2vw, 14px);
@@ -152,133 +167,83 @@
       background: #0f1428;
       outline: 1px solid rgba(255,255,255,.06);
     }
-    .track{
-      display:flex;
-      height:100%;
-      will-change: transform;
-      transition: transform .55s cubic-bezier(.22,.61,.36,1);
-    }
-    .slide{
-      flex:0 0 100%;
-      height:100%;
-    }
-    .slide > img{
-      width:100%; height:100%;
-      object-fit:cover;
-      display:block;
-    }
+    .track{ display:flex; height:100%; will-change: transform; transition: transform .55s cubic-bezier(.22,.61,.36,1); }
+    .slide{ flex:0 0 100%; height:100%; }
+    .slide > img{ width:100%; height:100%; object-fit:cover; display:block; }
     .slide-caption{
-      position:absolute;
-      left:10px; bottom:10px;
+      position:absolute; left:10px; bottom:10px;
       background: color-mix(in oklab, #000 40%, var(--accent) 10%);
-      color:#fff;
-      padding: 6px 10px;
-      border-radius: 999px;
+      color:#fff; padding: 6px 10px; border-radius: 999px;
       font-size: clamp(.75rem, 2.4vw, .9rem);
       backdrop-filter: blur(6px);
     }
-
-    .controls{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      justify-content: space-between;
-      padding: 6px;
-    }
+    .controls{ display:flex; align-items:center; gap:8px; justify-content: space-between; padding: 6px; }
     .btn{
-      appearance:none;
-      border: 0;
-      padding: .6rem .9rem;
-      border-radius: 12px;
+      appearance:none; border: 0; padding: .6rem .9rem; border-radius: 12px;
       background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 86%, #fff 0%), color-mix(in oklab, var(--accent) 64%, #000 10%));
-      color:#1c0e16;
-      font-weight: 700;
-      letter-spacing:.2px;
+      color:#1c0e16; font-weight: 700; letter-spacing:.2px;
       box-shadow: 0 4px 14px rgba(255, 122, 198, .25);
     }
-    .btn.secondary{
-      background: linear-gradient(180deg, #2b335a, #1b2348);
-      color:#e8ecff;
-      box-shadow: 0 4px 14px rgba(0,0,0,.25);
-    }
-    .dots{
-      display:flex; gap:6px; align-items:center; margin-inline: auto;
-    }
-    .dot{
-      width:8px; height:8px; border-radius:999px; background:#49507d; opacity:.8;
-    }
+    .btn.secondary{ background: linear-gradient(180deg, #2b335a, #1b2348); color:#e8ecff; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+    .dots{ display:flex; gap:6px; align-items:center; margin-inline: auto; }
+    .dot{ width:8px; height:8px; border-radius:999px; background:#49507d; opacity:.8; }
     .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(120,243,255,.18) }
 
-    /* Utility row */
-    .utility{
-      display:flex; flex-wrap:wrap; gap:8px;
-      padding: var(--pad);
-      justify-content:center;
-    }
+    /* =========================================================
+       UTILITY ROW (Play/Pause + Share)
+       - Music button is hidden until party starts (per your request)
+       ========================================================= */
+    .utility{ display:flex; flex-wrap:wrap; gap:8px; padding: var(--pad); justify-content:center; }
     .pill{
       background: linear-gradient(180deg, #232a4a, #1a203e);
       border:1px solid rgba(255,255,255,.08);
-      color:#e8ecff;
-      border-radius: 999px;
-      padding: .55rem .9rem;
-      display:inline-flex; align-items:center; gap:.5rem;
-      box-shadow: var(--shadow-2);
+      color:#e8ecff; border-radius: 999px; padding: .55rem .9rem;
+      display:inline-flex; align-items:center; gap:.5rem; box-shadow: var(--shadow-2);
     }
     .pill .mini{ font-size: .95rem }
     .pill .icon{ filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)) }
+    #musicToggle[hidden]{ display:none !important; }
 
-    /* Video card */
-    .video-card{
-      padding: var(--pad);
-      display:grid; gap:10px;
-    }
+    /* =========================================================
+       VIDEO CARD
+       ========================================================= */
+    .video-card{ padding: var(--pad); display:grid; gap:10px; }
     video{
-      width:100%;
-      height:auto;
-      border-radius: var(--radius-md);
-      display:block;
-      box-shadow: var(--shadow-1);
-      background:#0a0f22;
-      outline: 1px solid rgba(255,255,255,.06);
+      width:100%; height:auto; border-radius: var(--radius-md); display:block;
+      box-shadow: var(--shadow-1); background:#0a0f22; outline: 1px solid rgba(255,255,255,.06);
     }
     .video-note{ color:var(--muted); font-size: .95rem }
 
-    /* Footer */
+    /* =========================================================
+       FOOTER
+       ========================================================= */
     footer{
-      text-align:center;
-      color: var(--muted);
-      padding: 20px var(--pad) 36px;
-      font-size: clamp(.9rem, 2.3vw, 1rem);
+      text-align:center; color: var(--muted);
+      padding: 20px var(--pad) 36px; font-size: clamp(.9rem, 2.3vw, 1rem);
     }
 
-    /* Fullscreen Start Overlay */
+    /* =========================================================
+       START OVERLAY (user gesture)
+       ========================================================= */
     .overlay{
-      position:fixed; inset:0; z-index: 9999;
-      display:grid; place-items:center;
+      position:fixed; inset:0; z-index: 9999; display:grid; place-items:center;
       background:
         radial-gradient(60vmax 40vmax at 50% 30%, color-mix(in oklab, var(--accent) 5%, transparent) 0 70%, transparent),
         linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.65));
       backdrop-filter: blur(2px);
     }
-    .overlay-inner{
-      text-align:center;
-      display:grid; gap: 12px;
-    }
+    .overlay-inner{ text-align:center; display:grid; gap: 12px; }
     .party-btn{
-      font-size: clamp(1.05rem, 4.6vw, 1.35rem);
-      padding: .9rem 1.3rem;
-      border-radius: 14px;
-      border:0;
-      color:#1a0e14;
-      font-weight:800;
-      letter-spacing:.3px;
-      background:
-        conic-gradient(from 0deg, #ffe3f6, #d9fff9, #fff3c7, #ffe3f6);
+      font-size: clamp(1.05rem, 4.6vw, 1.35rem); padding: .9rem 1.3rem; border-radius: 14px; border:0;
+      color:#1a0e14; font-weight:800; letter-spacing:.3px;
+      background: conic-gradient(from 0deg, #ffe3f6, #d9fff9, #fff3c7, #ffe3f6);
       box-shadow: 0 10px 28px rgba(255, 122, 198, .35);
     }
     .overlay-hint{ color:#d6dbff; font-size:.95rem }
 
-    /* Confetti canvas & balloons layer */
+    /* =========================================================
+       EFFECTS LAYERS (confetti + balloons)
+       ========================================================= */
     #confetti{ position: fixed; inset:0; pointer-events:none; z-index: 9990 }
     #balloons{ position: fixed; inset:0; pointer-events:none; z-index: 9980; overflow:hidden }
     .balloon{
@@ -291,7 +256,7 @@
       box-shadow: inset 0 -8px 18px rgba(0,0,0,.18);
       animation: rise linear both;
     }
-    .balloon::after{ /* little string */
+    .balloon::after{ /* string */
       content:"";
       position:absolute; left:50%; bottom:-40%;
       width:2px; height: 40%;
@@ -299,43 +264,50 @@
       transform: translateX(-50%);
       opacity:.7;
     }
+    /* Longer on-screen time (per your request) */
     @keyframes rise{
       from{ transform: translateY(105vh) translateX(var(--x, 0)) rotate(-2deg) }
       to  { transform: translateY(-110px) translateX(calc(var(--x, 0) + 10px)) rotate(6deg) }
     }
-    @media (prefers-reduced-motion: reduce){
-      .balloon{ animation-duration: .001s }
-    }
+    @media (prefers-reduced-motion: reduce){ .balloon{ animation-duration: .001s } }
 
-    /* Toast */
+    /* =========================================================
+       TOAST (copy/share feedback)
+       ========================================================= */
     .toast{
       position: fixed; left:50%; bottom: 18px; transform: translateX(-50%);
-      background: #101736;
-      color:#e8ecff;
-      padding: .6rem .9rem;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow: var(--shadow-2);
-      opacity:0; translate: 0 6px; transition: opacity .25s, translate .25s;
-      z-index: 99999;
+      background: #101736; color:#e8ecff; padding: .6rem .9rem; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08); box-shadow: var(--shadow-2);
+      opacity:0; translate: 0 6px; transition: opacity .25s, translate .25s; z-index: 99999;
     }
     .toast.show{ opacity:1; translate: 0 0 }
 
-    /* Respect data saver – visually indicate muted effects */
-    @media (prefers-reduced-data: reduce){
-      body::before{ opacity:.12 }
-    }
+    /* =========================================================
+       REDUCED DATA / MOTION
+       ========================================================= */
+    @media (prefers-reduced-data: reduce){ body::before{ opacity:.12 } }
   </style>
 </head>
 <body>
+  <!-- =========================================================
+       BACKGROUND WALLPAPER LAYER (fills most, not all)
+       ========================================================= -->
+  <div id="wallpaper" aria-hidden="true"></div>
+
+  <!-- =========================================================
+       HEADER / HERO
+       ========================================================= -->
   <header aria-labelledby="title">
     <span class="hero-badge" aria-hidden="true">🎉 It’s Party Time</span>
     <h1 id="title">Happy Birthday <span id="friendName"> <!-- // EDIT HERE: your friend’s name -->Alex</span>! 🥳</h1>
-    <p class="hero-sub">Wishing you laughter, cake, and all the good things. Tap the button below to start the party.</p>
+    <p class="hero-sub">Tap the button below to start the party — music, confetti & balloons will appear!</p>
   </header>
 
+  <!-- =========================================================
+       MAIN CONTENT
+       ========================================================= -->
   <main>
-    <!-- Slideshow / Carousel -->
+    <!-- ===================== SLIDESHOW ===================== -->
     <section class="card slideshow" aria-label="Photo slideshow">
       <div class="viewport" aria-live="polite">
         <div class="track" id="track" style="transform: translateX(0%)">
@@ -385,7 +357,8 @@
       </div>
 
       <div class="utility" role="group" aria-label="Utilities">
-        <button class="pill" id="musicToggle" aria-pressed="false" aria-label="Play or pause the birthday music">
+        <!-- Music control is hidden until "Start Party" is tapped (per your request) -->
+        <button class="pill" id="musicToggle" hidden aria-pressed="false" aria-label="Play or pause the birthday music">
           <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
         </button>
         <button class="pill" id="shareBtn" aria-label="Share or copy link">
@@ -394,7 +367,7 @@
       </div>
     </section>
 
-    <!-- Video -->
+    <!-- ===================== VIDEO ===================== -->
     <section class="card video-card" aria-labelledby="vidTitle">
       <h2 id="vidTitle" style="margin:0; font-size: clamp(1.2rem, 4.2vw, 1.6rem)">A little birthday clip 🎬</h2>
       <video
@@ -412,67 +385,87 @@
     </section>
   </main>
 
+  <!-- =========================================================
+       FOOTER
+       ========================================================= -->
   <footer>
-    © <span id="year"></span> With love • Made for
-    <strong><span aria-hidden="true">🎂</span> <span class="sr-only">Birthday</span></strong> moments.
+    © <span id="year"></span> With love • Made for joyful moments.
   </footer>
 
-  <!-- Start overlay (required for user gesture to start audio) -->
+  <!-- =========================================================
+       START OVERLAY (user gesture to start audio & effects)
+       ========================================================= -->
   <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Start birthday celebration">
     <div class="overlay-inner">
       <button id="start" class="party-btn">💥 Tap to start the party!</button>
-      <div class="overlay-hint">Starts music, confetti & balloons</div>
+      <div class="overlay-hint">Starts music, confetti & balloons. You’ll get a Play/Pause button too.</div>
     </div>
   </div>
 
-  <!-- Effects layers -->
+  <!-- =========================================================
+       EFFECTS LAYERS
+       ========================================================= -->
   <canvas id="confetti" aria-hidden="true"></canvas>
   <div id="balloons" aria-hidden="true"></div>
 
-  <!-- Media -->
+  <!-- =========================================================
+       MEDIA
+       ========================================================= -->
   <audio id="music" src="assets/music.mp3" preload="none"></audio>
 
-  <!-- Live regions -->
+  <!-- =========================================================
+       LIVE REGIONS / TOAST
+       ========================================================= -->
   <div id="sr" class="sr-only" aria-live="polite" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;">Ready</div>
   <div id="toast" class="toast" role="status" aria-live="polite">Copied!</div>
 
   <script>
+  /* ============================================================
+     UTILITIES
+     ============================================================ */
   (function(){
-    const $ = (sel, root=document) => root.querySelector(sel);
+    const $  = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    // Elements
-    const overlay = $('#overlay');
-    const startBtn = $('#start');
-    const music = $('#music');
-    const musicToggle = $('#musicToggle');
-    const musicLabel = $('#musicLabel');
-    const shareBtn = $('#shareBtn');
-    const toast = $('#toast');
-    const confettiCanvas = $('#confetti');
+    /* ------------------------------------------------------------
+       ELEMENT REFERENCES
+       ------------------------------------------------------------ */
+    const overlay       = $('#overlay');
+    const startBtn      = $('#start');
+    const music         = $('#music');
+    const musicToggle   = $('#musicToggle');
+    const musicLabel    = $('#musicLabel');
+    const shareBtn      = $('#shareBtn');
+    const toast         = $('#toast');
+    const confettiCanvas= $('#confetti');
     const balloonsLayer = $('#balloons');
-    const sr = $('#sr');
-    const nameEl = $('#friendName');
-    const yearEl = $('#year');
+    const sr            = $('#sr');
+    const nameEl        = $('#friendName');
+    const yearEl        = $('#year');
 
-    // Slideshow state
     const track = $('#track');
-    const slides = $$('.slide');
-    const dots = $$('.dot');
-    const prev = $('#prev');
-    const next = $('#next');
+    const slides= $$('.slide');
+    const dots  = $$('.dot');
+    const prev  = $('#prev');
+    const next  = $('#next');
 
+    /* ------------------------------------------------------------
+       STATE
+       ------------------------------------------------------------ */
     let index = 0;
     let hasCelebrated = false;
     yearEl.textContent = new Date().getFullYear();
-
-    // Accessibility: If name is empty, expose placeholder
     if(!nameEl.textContent.trim()){ nameEl.textContent = 'Friend'; }
 
-    // Helpers
+    /* ------------------------------------------------------------
+       PREFERENCES
+       ------------------------------------------------------------ */
     const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const prefersReducedData = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
+    const prefersReducedData   = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
 
+    /* ============================================================
+       SLIDESHOW LOGIC
+       ============================================================ */
     function go(i, announce=true){
       index = (i + slides.length) % slides.length;
       track.style.transform = `translateX(-${index*100}%)`;
@@ -481,17 +474,15 @@
     }
     function nextSlide(){ go(index+1); }
     function prevSlide(){ go(index-1); }
-
     next.addEventListener('click', nextSlide);
     prev.addEventListener('click', prevSlide);
     dots.forEach(d => d.addEventListener('click', ()=> go(+d.dataset.i)));
 
-    // Pointer swipe
+    // Pointer/touch swipe
     (()=> {
       let x0=null, t=null;
       const vp = $('.viewport');
       const onStart = (e)=>{ x0=(e.touches?e.touches[0].clientX:e.clientX); t=Date.now(); };
-      const onMove  = (e)=>{ if(x0==null) return; };
       const onEnd   = (e)=>{
         if(x0==null) return;
         const x1 = (e.changedTouches?e.changedTouches[0].clientX:e.clientX);
@@ -506,7 +497,11 @@
       vp.addEventListener('touchend', onEnd);
     })();
 
-    // Music controls
+    /* ============================================================
+       MUSIC CONTROLS
+       - Hidden until party starts.
+       - Start overlay triggers music play (user gesture compliant).
+       ============================================================ */
     function updateMusicUI(){
       const playing = !music.paused;
       musicToggle.setAttribute('aria-pressed', String(playing));
@@ -516,14 +511,16 @@
       try{
         if(music.paused){ await music.play(); }
         else { music.pause(); }
-      }catch(err){
+      }catch{
         showToast('Unable to play audio. Check device volume.');
       }finally{ updateMusicUI(); }
     });
     music.addEventListener('play', updateMusicUI);
     music.addEventListener('pause', updateMusicUI);
 
-    // Share / Copy
+    /* ============================================================
+       SHARE / COPY LINK
+       ============================================================ */
     shareBtn.addEventListener('click', async ()=>{
       const shareData = { title: document.title, text: '🎂 Join the birthday page!', url: location.href };
       try{
@@ -543,7 +540,9 @@
       }
     });
 
-    // Toast helper
+    /* ============================================================
+       TOAST HELPER
+       ============================================================ */
     let toastTimer = null;
     function showToast(msg='Done'){
       toast.textContent = msg;
@@ -552,20 +551,32 @@
       toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
     }
 
-    // Overlay: start party (audio + confetti + balloons)
+    /* ============================================================
+       START OVERLAY -> PARTY!
+       - Plays music
+       - Confetti (single burst)
+       - Balloons (linger longer, per request)
+       - Reveals Play/Pause button automatically and focuses it
+       ============================================================ */
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
-      try{
-        await music.play(); // user gesture compliant
-      }catch(e){
-        // If blocked, we still proceed with visuals and update UI to "Play"
-      }
+
+      // Start music (user gesture)
+      try{ await music.play(); }catch{}
+
+      // Reveal and focus Play/Pause button (per your request)
+      musicToggle.removeAttribute('hidden');
       updateMusicUI();
+      setTimeout(()=> musicToggle.focus(), 60);
+
+      // Effects
       celebrate();
+
+      // Remove overlay
       overlay.remove();
     });
 
-    // Also allow Enter/Space on overlay
+    // Keyboard on overlay
     overlay.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter' || e.key === ' '){
         e.preventDefault(); startBtn.click();
@@ -577,17 +588,16 @@
       hasCelebrated = true;
 
       if(!prefersReducedData()){
-        confettiBurst();
-        spawnBalloons(18);
+        confettiBurst();        // single burst
+        spawnBalloons(24);      // more balloons + longer duration
       }else{
-        // Gentle fallback indicator for data-saver users
         showToast('Effects reduced to save data.');
       }
     }
 
-    // =======================
-    // CONFETTI (single burst)
-    // =======================
+    /* ============================================================
+       CONFETTI (single burst)
+       ============================================================ */
     function confettiBurst(){
       const ctx = confettiCanvas.getContext('2d');
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -598,7 +608,7 @@
       confettiCanvas.style.height = H + 'px';
       ctx.scale(dpr, dpr);
 
-      const n = 140;
+      const n = 150;
       const colors = ['#ffd166','#06d6a0','#118ab2','#ef476f','#a78bfa','#fca5a5','#7dd3fc'];
       const parts = Array.from({length:n}, ()=>({
         x: W/2, y: H*0.35,
@@ -608,12 +618,10 @@
         h: Math.random()*3+2,
         rot: Math.random()*Math.PI,
         vr: (Math.random()*2-1)*0.2,
-        col: colors[(Math.random()*colors.length)|0],
-        ttl: 1200 + Math.random()*400
+        col: colors[(Math.random()*colors.length)|0]
       }));
       const start = performance.now();
-      const grav = 0.25;
-      const air = 0.996;
+      const grav = 0.25, air = 0.996;
 
       function frame(t){
         const elapsed = t - start;
@@ -630,26 +638,17 @@
           ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
           ctx.restore();
         }
-        if(elapsed < 1500 && !prefersReducedMotion()) requestAnimationFrame(frame);
-        else ctx.clearRect(0,0,W,H); // cleanup
+        if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
+        else ctx.clearRect(0,0,W,H); // cleanup after ~1.6s
       }
       requestAnimationFrame(frame);
-
-      window.addEventListener('resize', ()=>{ // keep canvas crisp
-        if(!hasCelebrated) return;
-        const {innerWidth: W2, innerHeight: H2} = window;
-        confettiCanvas.width = Math.floor(W2 * dpr);
-        confettiCanvas.height = Math.floor(H2 * dpr);
-        confettiCanvas.style.width = W2 + 'px';
-        confettiCanvas.style.height = H2 + 'px';
-        ctx.scale(dpr, dpr);
-      }, {once:true});
     }
 
-    // =======================
-    // BALLOONS
-    // =======================
-    function spawnBalloons(count=16){
+    /* ============================================================
+       BALLOONS (linger longer)
+       - Increased animation durations and cleanup time
+       ============================================================ */
+    function spawnBalloons(count=20){
       const palette = [
         'hsl(330 95% 72%)', /* pink */
         'hsl(193 95% 68%)', /* aqua */
@@ -657,55 +656,51 @@
         'hsl(262 95% 78%)', /* purple */
         'hsl(146 62% 61%)'  /* green */
       ];
-      const minDur = prefersReducedMotion()? 0.01 : 9;
-      const maxDur = prefersReducedMotion()? 0.02 : 14;
+      // Longer screen time (per request)
+      const minDur = prefersReducedMotion()? 0.01 : 14;  // was 9
+      const maxDur = prefersReducedMotion()? 0.02 : 22;  // was 14
 
       for(let i=0;i<count;i++){
         const b = document.createElement('div');
         b.className = 'balloon';
         const clr = palette[Math.floor(Math.random()*palette.length)];
         const left = Math.random()*100;
-        const drift = (Math.random()*2-1) * 80 + 'px';
+        const drift = (Math.random()*2-1) * 90 + 'px'; // a bit more drift
         b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
         b.style.background = `radial-gradient(circle at 30% 30%, #fff8, transparent 35%), ${clr}`;
         b.style.setProperty('--x', drift);
         b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
-        b.style.animationDelay = (Math.random()*1.5) + 's';
+        b.style.animationDelay = (Math.random()*1.8) + 's';
         balloonsLayer.appendChild(b);
-        // Clean up after one pass
         const kill = () => b.remove();
         b.addEventListener('animationend', kill);
-        // Safety cleanup
-        setTimeout(kill, 18000);
+        setTimeout(kill, 32000); // increased cleanup timeout
       }
     }
 
-    // Keyboard shortcuts
+    /* ============================================================
+       KEYBOARD SHORTCUTS
+       ============================================================ */
     window.addEventListener('keydown', (e)=>{
       if(e.key === 'ArrowRight') nextSlide();
-      if(e.key === 'ArrowLeft') prevSlide();
+      if(e.key === 'ArrowLeft')  prevSlide();
       if((e.key === ' ' || e.key === 'k') && !e.target.closest('button, a, input, textarea')){
         e.preventDefault();
-        musicToggle.click();
+        if(!musicToggle.hasAttribute('hidden')) musicToggle.click();
       }
     });
 
-    // Initial slide
+    // Init
     go(0, false);
-
-    // Nice: if the user switches tabs, we don’t blare music on return
-    document.addEventListener('visibilitychange', ()=>{
-      if(document.hidden) { /* keep state, no forced pause */ }
-    });
   })();
   </script>
 
-  <!-- =======================
+  <!-- =========================================================
        QUICK EDIT HELP
-       =======================
-       // EDIT HERE (friend’s name): search for id="friendName" above
-       // EDIT HERE (accent colors): change --accent / --accent-2 in :root
-       // EDIT HERE (background): tweak --bg-1..3 and the gradients in <body> styles
-  -->
+       - Friend’s name: search id="friendName" above
+       - Accent colors: change --accent / --accent-2 in :root
+       - Background: tweak --bg-* and gradients in body
+       - Wallpaper: change #wallpaper background-image
+       ========================================================= -->
 </body>
 </html>
