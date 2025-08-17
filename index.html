@@ -1,1 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>🎉 Happy Birthday! 🎂</title>
+
+  <!-- Keep it unlisted -->
+  <meta name="robots" content="noindex,nofollow" />
+
+  <!-- Social preview (optional; replace URLs) -->
+  <meta property="og:title" content="Happy Birthday!" />
+  <meta property="og:description" content="A little birthday surprise 🎂🎈" />
+  <meta property="og:image" content="assets/photo1.jpg" />
+  <meta property="og:type" content="website" />
+
+  <!-- Helpful for faster audio start -->
+  <link rel="preload" href="assets/music.mp3" as="audio" />
+
+  <style>
+    :root{
+      --bg:#0f172a; --panel:#0b1020; --text:#e5e7eb; --muted:#94a3b8;
+      --border:rgba(255,255,255,.09);
+      --accent:#f59e0b; --accent2:#22d3ee; --accent3:#a78bfa;
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0 }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 70% -10%, #1f2937, var(--bg)),
+        radial-gradient(900px 500px at 10% 120%, #11182700, #0b102000 40%);
+      overflow-x:hidden;
+    }
+    .wrap{ max-width: 980px; margin:0 auto; padding:24px }
+    header{ text-align:center; margin-top:36px }
+    h1{ font-size: clamp(32px, 6vw, 64px); margin:0 0 8px }
+    .subtitle{ color:var(--muted); margin:0 0 20px }
+
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
+      border-radius:999px; background:#1f2937; border:1px solid var(--border);
+      color:var(--text); font-weight:600; text-decoration:none; cursor:pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+    .btn:hover{ transform: translateY(-1px) }
+
+    .card{
+      background: linear-gradient(180deg, var(--panel), #0f172a);
+      border:1px solid var(--border); border-radius:20px; padding:20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .hero{ display:grid; gap:20px; grid-template-columns: 1.2fr 1fr; align-items:center }
+    @media (max-width: 900px){ .hero{ grid-template-columns:1fr } }
+
+    .big{ font-size: clamp(20px, 2.1vw, 26px); line-height:1.65 }
+    .accent{ color:var(--accent) }
+
+    .gallery{
+      display:grid; gap:12px;
+      grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+    }
+    .gallery img, .gallery video{
+      width:100%; height:180px; object-fit:cover; border-radius:14px;
+      border:1px solid var(--border); background:#0b1020;
+    }
+
+    .overlay{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(2,6,23,.92); backdrop-filter: blur(3px); z-index:50;
+    }
+    .overlay-inner{ text-align:center }
+    .overlay .btn{ font-size:18px; padding:14px 18px }
+
+    /* balloons */
+    .balloon{
+      position:absolute; bottom:-120px; width:26px; height:34px;
+      border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+      background:var(--accent); opacity:.85; filter:blur(.2px);
+      animation: floatUp 12s linear infinite;
+    }
+    .balloon:after{ content:""; position:absolute; left:50%; top:90%; width:2px; height:26px; background:#d1d5db; transform:translateX(-50%) }
+    @keyframes floatUp{ to{ transform: translateY(-115vh) } }
+
+    canvas#confetti{ position:fixed; inset:0; pointer-events:none; z-index:30 }
+    footer{ text-align:center; color:var(--muted); margin: 32px 0 10px; font-size:14px }
+  </style>
+</head>
+<body>
+  <!-- confetti canvas -->
+  <canvas id="confetti"></canvas>
+
+  <!-- start overlay to allow audio (autoplay policies) -->
+  <div class="overlay" id="startOverlay" aria-modal="true" role="dialog">
+    <div class="overlay-inner">
+      <h1>Ready to celebrate? 🎉</h1>
+      <p class="subtitle">Tap to start the music & confetti</p>
+      <button class="btn" id="startBtn">Start the party</button>
+    </div>
+  </div>
+
+  <!-- balloons -->
+  <div id="balloons"></div>
+
+  <div class="wrap">
+    <header>
+      <h1>Happy Birthday, <span class="accent" id="friendName">My Friend</span>! 🎂</h1>
+      <p class="subtitle">Wishing you a day filled with joy, laughter, and great memories.</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+        <button class="btn" id="playPause">▶ Play music</button>
+        <a class="btn" id="copyLink" href="#">🔗 Copy link</a>
+      </div>
+    </header>
+
+    <section class="card hero" style="margin-top:20px">
+      <div>
+        <p class="big">
+          Here’s a little page made just for <span class="accent">you</span> — with photos,
+          a short video, and your song. Scroll down and enjoy!
+        </p>
+      </div>
+      <img src="assets/photo1.jpg" alt="Birthday hero" style="width:100%; border-radius:16px; border:1px solid var(--border)">
+    </section>
+
+    <section class="card" style="margin-top:24px">
+      <h2 style="margin:0 0 10px">Memories 📸</h2>
+      <div class="gallery">
+        <img src="assets/photo1.jpg" alt="Memory 1">
+        <img src="assets/photo2.jpg" alt="Memory 2">
+        <img src="assets/photo3.jpg" alt="Memory 3">
+        <video src="assets/video.mp4" controls playsinline preload="metadata"></video>
+      </div>
+    </section>
+
+    <footer>Made with ❤️ & confetti</footer>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bgm" preload="auto" src="assets/music.mp3"></audio>
+
+  <script>
+    // ===== Customize this =====
+    document.getElementById('friendName').textContent = 'Sarah'; // <-- your friend’s name
+
+    // Copy link button
+    document.getElementById('copyLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      navigator.clipboard.writeText(location.href).then(() => alert('Link copied!'));
+    });
+
+    // Audio controls + overlay
+    const audio = document.getElementById('bgm');
+    const playBtn = document.getElementById('playPause');
+    const overlay = document.getElementById('startOverlay');
+
+    async function playMusic(){
+      try{
+        await audio.play();
+        playBtn.textContent = '⏸ Pause music';
+        launchConfetti();
+      }catch(err){
+        console.warn('Autoplay blocked until user taps.', err);
+      }
+    }
+    playBtn.addEventListener('click', ()=>{
+      if (audio.paused) playMusic();
+      else { audio.pause(); playBtn.textContent = '▶ Play music'; }
+    });
+    document.getElementById('startBtn').addEventListener('click', async ()=>{
+      overlay.style.display = 'none';
+      spawnBalloons();
+      await playMusic();
+    });
+
+    // Balloons
+    function spawnBalloons(){
+      const wrap = document.getElementById('balloons');
+      const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e'];
+      for (let i=0;i<28;i++){
+        const b = document.createElement('div');
+        b.className='balloon';
+        b.style.left = (Math.random()*100) + 'vw';
+        b.style.background = colors[i%colors.length];
+        b.style.animationDelay = (Math.random()*6)+'s';
+        b.style.animationDuration = (8 + Math.random()*10)+'s';
+        wrap.appendChild(b);
+      }
+    }
+
+    // Confetti
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    let parts = [];
+    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight }
+    addEventListener('resize', resize); resize();
+
+    function launchConfetti(){
+      const colors = ['#f59e0b','#22d3ee','#a78bfa','#10b981','#f43f5e','#fde047'];
+      for (let i=0;i<200;i++){
+        parts.push({
+          x: canvas.width/2, y: canvas.height/3,
+          vx: (Math.random()*6-3), vy: (Math.random()*-8-2),
+          g: 0.15 + Math.random()*0.15,
+          size: 4 + Math.random()*4,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          rot: Math.random()*6.28, vr: Math.random()*0.2-0.1
+        });
+      }
+      requestAnimationFrame(tick);
+      setTimeout(()=>{ parts=[]; }, 6500);
+    }
+    function tick(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      parts.forEach(p=>{
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
+        ctx.restore();
+      });
+      if (parts.length) requestAnimationFrame(tick);
+    }
+  </script>
+</body>
+</html>
 
