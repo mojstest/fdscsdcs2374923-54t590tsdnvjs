@@ -18,13 +18,12 @@
        THEME TOKENS  (// EDIT HERE: colors)
        ========================================================= */
     :root{
-      /* Dark pink / purple theme */
+      /* Dark pink / purple vibe */
       --accent: #ff4fa3;     /* EDIT HERE: primary accent */
       --accent-2: #b784ff;   /* EDIT HERE: secondary accent */
 
       --bg-1: #120616;       /* EDIT HERE: deep background */
       --bg-2: #1b0c24;       /* EDIT HERE: gradient top */
-      --bg-3: #2a0f3a;
 
       --card: color-mix(in oklab, #000 70%, #fff 0%);
       --text: #f9eefd;
@@ -186,7 +185,7 @@
     .dot[aria-current="true"]{ background: var(--accent-2); box-shadow: 0 0 0 3px rgba(183,132,255,.22) }
 
     /* =========================================================
-       UTILITY ROW (Play/Pause + Share + Slide Auto Toggle)
+       UTILITY ROW (Play/Pause Music + Share + Slideshow Auto Toggle)
        ========================================================= */
     .utility{ display:flex; flex-wrap:wrap; gap:8px; padding: var(--pad); justify-content:center; }
     .pill{
@@ -269,8 +268,8 @@
     /* Cute floating stickers (cats, paws, hearts) – varied size & dimmer */
     .sticker{
       position:absolute;
-      width: calc(var(--sz,1) * clamp(22px, 4.2vw, 42px));
-      height: calc(var(--sz,1) * clamp(22px, 4.2vw, 42px));
+      width: calc(var(--sz,1) * clamp(22px, 4.2vw, 48px));
+      height: calc(var(--sz,1) * clamp(22px, 4.2vw, 48px));
       opacity: var(--alpha, .38);            /* dimmer so content stays readable */
       transform: translate3d(0,0,0) scale(1);
       animation: bob var(--dur, 10s) ease-in-out infinite alternate;
@@ -379,7 +378,7 @@
           <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
         </button>
 
-        <!-- NEW: Slideshow autoplay toggle -->
+        <!-- Slideshow autoplay toggle -->
         <button class="pill" id="slideAutoToggle" aria-pressed="true" aria-label="Pause or play slideshow autoplay">
           <span class="icon" aria-hidden="true">🖼️</span><span class="mini" id="slideAutoLabel">Slideshow: Pause</span>
         </button>
@@ -446,7 +445,7 @@
 
   <script>
   /* ============================================================
-     UTILITIES
+     CORE SCRIPT
      ============================================================ */
   (function(){
     const $  = (sel, root=document) => root.querySelector(sel);
@@ -528,17 +527,16 @@
     if(prefersReducedMotion()){ stopAuto(); }
     else { startAuto(); }
 
-    next.addEventListener('click', ()=>{ nextSlide(); resetAutoKick(); });
-    prev.addEventListener('click', ()=>{ prevSlide(); resetAutoKick(); });
+    next?.addEventListener('click', ()=>{ nextSlide(); resetAutoKick(); });
+    prev?.addEventListener('click', ()=>{ prevSlide(); resetAutoKick(); });
     dots.forEach(d => d.addEventListener('click', ()=>{ go(+d.dataset.i); resetAutoKick(); }));
+    slideAutoBtn.addEventListener('click', toggleAuto);
 
     function resetAutoKick(){
       if(!slideAuto) return;
       clearInterval(slideTimer);
       slideTimer = setInterval(nextSlide, 3500);
     }
-
-    slideAutoBtn.addEventListener('click', toggleAuto);
 
     // Pointer/touch swipe
     (()=> {
@@ -563,7 +561,7 @@
        MUSIC CONTROLS
        - Hidden until party starts.
        - Start overlay triggers music play (user gesture compliant).
-       ============================================================ */
+      ============================================================ */
     function updateMusicUI(){
       const playing = !music.paused;
       musicToggle.setAttribute('aria-pressed', String(playing));
@@ -599,7 +597,7 @@
     });
     function resumeMusicIfNeeded(){
       if(hasCelebrated && musicWasPlayingBeforeVideo){
-        music.play().catch(()=>{ /* ignore */ });
+        music.play().catch(()=>{});
         updateMusicUI();
       }
     }
@@ -645,7 +643,7 @@
        - Confetti (single burst)
        - Balloons (linger longer)
        - Reveals Play/Pause button
-       - Spawns MORE & BIGGER stickers in varied sizes (dimmer)
+       - Spawns MORE & BIGGER stickers (varied sizes, dimmer)
        ============================================================ */
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
@@ -669,11 +667,16 @@
       if(hasCelebrated) return;
       hasCelebrated = true;
 
+      confettiBurst();
+
+      // Always show stickers (even on data saver), but disable animation if saving data.
+      const disableStickerAnim = prefersReducedData();
+      spawnStickers(disableStickerAnim ? 16 : 28, disableStickerAnim);
+
+      // Balloons respect data saver
       if(!prefersReducedData()){
-        confettiBurst();
-        spawnBalloons(26);      // longer duration via CSS + cleanup timer
-        spawnStickers(28);      // MORE, BIGGER, varied sizes, dimmer, edge-only
-      }else{
+        spawnBalloons(26);
+      } else {
         showToast('Effects reduced to save data.');
       }
     }
@@ -730,13 +733,9 @@
     /* ============================================================
        BALLOONS (linger longer)
        ============================================================ */
-    function spawnBalloons(count=20){
+    function spawnBalloons(count=26){
       const palette = [
-        'hsl(330 95% 72%)', /* pink */
-        'hsl(280 85% 75%)', /* purple */
-        'hsl(322 85% 72%)', /* rose */
-        'hsl(260 75% 70%)', /* violet */
-        'hsl(300 70% 72%)'  /* magenta */
+        'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
       ];
       const minDur = prefersReducedMotion()? 0.01 : 14;
       const maxDur = prefersReducedMotion()? 0.02 : 22;
@@ -761,6 +760,8 @@
 
     /* ============================================================
        STICKERS (kitties, paws, MORE hearts) – bigger, varied sizes, dimmer, edge-only
+       NOTE: Previously stickers didn't show due to an accidental
+             function overwrite. Fixed: single, real implementation.
        ============================================================ */
     const STICKERS = [
       // Cute cat head
@@ -780,22 +781,22 @@
          <circle cx="46" cy="28" r="6" fill="#b784ff"/><circle cx="26" cy="22" r="5" fill="#b784ff"/><circle cx="38" cy="22" r="5" fill="#b784ff"/>
          <path d="M22 40c6 4 14 4 20 0" stroke="#2a0f22" stroke-opacity=".25"/>
        </svg>`,
-      // Sparkly heart (larger)
+      // Heart 1
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M32 54s-14-9-20-16C6 32 6 22 14 18c6-3 12 0 14 4 2-4 8-7 14-4 8 4 8 14 2 20-6 7-20 16-20 16z" fill="#ff8bd2" />
          <path d="M20 16l2-4m4 2l2-4" stroke="#ffd7ef" stroke-linecap="round"/>
        </svg>`,
-      // Heart variant 2
+      // Heart 2
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M12 28c0-7 6-12 12-12 5 0 8 2 8 5s3-5 10-5c8 0 14 7 12 16-3 12-18 21-22 24-4-3-20-12-22-24z" fill="#ffa1d9"/>
        </svg>`,
-      // Tiny heart outline
+      // Heart outline
       `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
          <path d="M32 50C14 38 10 32 10 24c0-6 5-10 10-10 6 0 10 6 12 8 2-2 6-8 12-8 5 0 10 4 10 10 0 8-4 14-22 26z" fill="none" stroke="#ffb3e6" stroke-width="3"/>
        </svg>`
     ];
 
-    function spawnStickers(count=20){
+    function spawnStickers(count=28, disableAnim=false){
       const W = window.innerWidth, H = window.innerHeight;
       const centerBox = { x1: W*0.22, y1: H*0.22, x2: W*0.78, y2: H*0.78 }; // avoid the middle
 
@@ -806,8 +807,7 @@
         // Weight hearts higher probability (~60%)
         const r = Math.random();
         if(r < 0.6){
-          // pick one of the heart variants (2/3/4)
-          const heartIdx = 2 + Math.floor(Math.random()*3);
+          const heartIdx = 2 + Math.floor(Math.random()*3); // 2..4
           el.innerHTML = STICKERS[heartIdx];
         }else{
           el.innerHTML = STICKERS[Math.floor(Math.random()*2)]; // cat or paw
@@ -831,19 +831,21 @@
         }
 
         // Size, opacity, and motion variance
-        const sizeFactor = (Math.random()*1.2 + 0.6).toFixed(2);     // 0.6x .. 1.8x
-        const alpha      = (Math.random()*0.18 + 0.28).toFixed(2);    // 0.28 .. 0.46 (dimmer)
-        const dx         = (Math.random()*24+12) * (Math.random()<0.5?-1:1);
-        const dy         = -(Math.random()*26+14);
+        const sizeFactor = (Math.random()*1.4 + 0.6).toFixed(2);     // 0.6x .. 2.0x (bigger overall)
+        const alpha      = (Math.random()*0.18 + 0.26).toFixed(2);    // 0.26 .. 0.44 (a bit dimmer)
+        const dx         = (Math.random()*26+12) * (Math.random()<0.5?-1:1);
+        const dy         = -(Math.random()*28+16);
         const dur        = (Math.random()*6+9).toFixed(2) + 's';
 
-        el.style.left = Math.max(4, Math.min(W-42, x)) + 'px';
-        el.style.top  = Math.max(4, Math.min(H-42, y)) + 'px';
+        el.style.left = Math.max(4, Math.min(W-60, x)) + 'px';
+        el.style.top  = Math.max(4, Math.min(H-60, y)) + 'px';
         el.style.setProperty('--sz', sizeFactor);
         el.style.setProperty('--alpha', alpha);
         el.style.setProperty('--dx', dx+'px');
         el.style.setProperty('--dy', dy+'px');
         el.style.setProperty('--dur', dur);
+
+        if(disableAnim){ el.style.animation = 'none'; }
 
         stickersLayer.appendChild(el);
       }
@@ -863,106 +865,6 @@
 
     // Init first slide
     go(0, false);
-
-    /* ============================================================
-       START HELPERS (celebration bundle)
-       ============================================================ */
-    function confettiBurst(){ /* (exact same as above) */ }
-    // --- Re-define with actual body from earlier to keep code compact in comments ---
-    {
-      const old = confettiBurst;
-      confettiBurst = function(){
-        const ctx = confettiCanvas.getContext('2d');
-        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-        const {innerWidth: W, innerHeight: H} = window;
-        confettiCanvas.width = Math.floor(W * dpr);
-        confettiCanvas.height = Math.floor(H * dpr);
-        confettiCanvas.style.width = W + 'px';
-        confettiCanvas.style.height = H + 'px';
-        ctx.scale(dpr, dpr);
-        const n = 150;
-        const colors = ['#ffd7ef','#b784ff','#ff8bd2','#ffb3e1','#e1c6ff','#ffcadf','#dcb2ff'];
-        const parts = Array.from({length:n}, ()=>({
-          x: W/2, y: H*0.35,
-          vx: (Math.random()*2-1)*7,
-          vy: (Math.random()*-1-0.8)*10,
-          w: Math.random()*8+5,
-          h: Math.random()*3+2,
-          rot: Math.random()*Math.PI,
-          vr: (Math.random()*2-1)*0.2,
-          col: colors[(Math.random()*colors.length)|0]
-        }));
-        const start = performance.now();
-        const grav = 0.25, air = 0.996;
-        function frame(t){
-          const elapsed = t - start;
-          ctx.clearRect(0,0,W,H);
-          for(const p of parts){
-            p.vy += grav;
-            p.vx *= air; p.vy *= air;
-            p.x += p.vx; p.y += p.vy;
-            p.rot += p.vr;
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rot);
-            ctx.fillStyle = p.col;
-            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-            ctx.restore();
-          }
-          if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
-          else ctx.clearRect(0,0,W,H);
-        }
-        requestAnimationFrame(frame);
-      }
-    }
-
-    function spawnBalloons(count=26){ /* already defined above */ }
-    // --- Re-define with actual body to keep comments orderly ---
-    {
-      const fn = spawnBalloons;
-      spawnBalloons = function(count=26){
-        const palette = [
-          'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
-        ];
-        const minDur = prefersReducedMotion()? 0.01 : 14;
-        const maxDur = prefersReducedMotion()? 0.02 : 22;
-        for(let i=0;i<count;i++){
-          const b = document.createElement('div');
-          b.className = 'balloon';
-          const clr = palette[Math.floor(Math.random()*palette.length)];
-          const left = Math.random()*100;
-          const drift = (Math.random()*2-1) * 90 + 'px';
-          b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
-          b.style.background = `radial-gradient(circle at 30% 30%, #fff6, transparent 35%), ${clr}`;
-          b.style.setProperty('--x', drift);
-          b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
-          b.style.animationDelay = (Math.random()*1.8) + 's';
-          balloonsLayer.appendChild(b);
-          const kill = () => b.remove();
-          b.addEventListener('animationend', kill);
-          setTimeout(kill, 32000);
-        }
-      }
-    }
-
-    function spawnStickers(count=28){ /* already defined above */ }
-
-    function celebrate(){
-      if(hasCelebrated) return;
-      hasCelebrated = true;
-
-      if(!prefersReducedData()){
-        confettiBurst();
-        spawnBalloons(26);
-        spawnStickers(28);
-      }else{
-        showToast('Effects reduced to save data.');
-      }
-    }
-
-    /* ============================================================
-       END IIFE
-       ============================================================ */
   })();
   </script>
 
