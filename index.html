@@ -48,7 +48,6 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        /* deep purple gradient base */
         radial-gradient(40% 60% at 50% 110%, #0c0410 0%, transparent 70%),
         linear-gradient(180deg, var(--bg-2), var(--bg-1));
       overflow-x:hidden;
@@ -66,7 +65,7 @@
       position:fixed; inset:-10vmax;
       z-index:-1;
       background:
-        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 26%, transparent) 0 60%, transparent 61%) ,
+        radial-gradient(120px 120px at 20% 30%, color-mix(in oklab, var(--accent) 26%, transparent) 0 60%, transparent 61%),
         radial-gradient(160px 160px at 80% 70%, color-mix(in oklab, var(--accent-2) 26%, transparent) 0 60%, transparent 61%),
         radial-gradient(90px 90px at 60% 20%, color-mix(in oklab, #ff8bd2 32%, transparent) 0 60%, transparent 61%);
       filter: blur(12px);
@@ -84,8 +83,8 @@
     #wallpaper{
       position: fixed;
       inset: clamp(16px, 6vmin, 64px); /* leaves a margin */
-      z-index: -2;                     /* below bokeh, above base gradient */
-      background-image: url("assets/wallpaper.jpg"); /* // EDIT HERE: preferred wallpaper */
+      z-index: -2;
+      background-image: url("assets/wallpaper.jpg");
       background-size: cover;
       background-position: center;
       border-radius: clamp(12px, 3.2vw, 22px);
@@ -153,33 +152,40 @@
     /* =========================================================
        SLIDESHOW / CAROUSEL
        ========================================================= */
-    .slideshow{ display:grid; grid-template-rows: auto auto; gap: 8px; padding: 8px; }
+    .slideshow{ display:grid; grid-template-rows: auto auto; gap: 8px; padding: 8px; /* --ratio is customizable */ }
     .viewport{
       position:relative;
       border-radius: clamp(10px, 2vw, 14px);
       overflow:hidden;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--ratio, 4/3);    /* 👈 change shape by setting --ratio on .slideshow */
       background: #160a22;
       outline: 1px solid rgba(255,255,255,.08);
-      contain: paint layout; /* smoother */
+      contain: layout paint;              /* smoother */
     }
 
-    /* 🔧 FIXED: use --n to size track/slides; translate in 100/--n increments */
+    /* exact movement math via CSS vars */
     .track{
       display:flex; height:100%;
       width: calc(100% * var(--n, 1));
       will-change: transform;
-      transition: transform .7s cubic-bezier(.18,.88,.24,1);
-      transform: translate3d(0,0,0);
+      transition: transform .7s cubic-bezier(.22,.61,.36,1);
+      transform: translate3d(calc(-1 * var(--i, 0) * (100% / var(--n, 1))), 0, 0);
     }
     .slide{
       flex: 0 0 calc(100% / var(--n, 1));
       min-width: calc(100% / var(--n, 1));
       height:100%;
+      position: relative;
     }
     .slide > img{
       width:100%; height:100%; object-fit:cover; object-position:center; display:block;
-      background:#0d0615; /* placeholder color while loading */
+      background:#0d0615;
+    }
+    .slide > img.contain{
+      object-fit: contain;
+      background:
+        radial-gradient(100% 100% at 50% 50%, rgba(255,255,255,.06), transparent 60%),
+        #0d0615;
     }
     .slide-caption{
       position:absolute; left:10px; bottom:10px;
@@ -270,7 +276,7 @@
       box-shadow: inset 0 -8px 18px rgba(0,0,0,.18);
       animation: rise linear both;
     }
-    .balloon::after{ /* string */
+    .balloon::after{
       content:"";
       position:absolute; left:50%; bottom:-40%;
       width:2px; height: 40%;
@@ -283,12 +289,11 @@
       to  { transform: translateY(-110px) translateX(calc(var(--x, 0) + 10px)) rotate(6deg) }
     }
 
-    /* Cute floating stickers (cats, paws, hearts) – varied size & dimmer */
     .sticker{
       position:absolute;
       width: calc(var(--sz,1) * clamp(22px, 4.2vw, 48px));
       height: calc(var(--sz,1) * clamp(22px, 4.2vw, 48px));
-      opacity: var(--alpha, .38);            /* dimmer so content stays readable */
+      opacity: var(--alpha, .38);
       transform: translate3d(0,0,0) scale(1);
       animation: bob var(--dur, 10s) ease-in-out infinite alternate;
       filter: saturate(.9) brightness(.9) drop-shadow(0 2px 4px rgba(0,0,0,.35));
@@ -306,7 +311,7 @@
     }
 
     /* =========================================================
-       TOAST (copy/share feedback)
+       TOAST
        ========================================================= */
     .toast{
       position: fixed; left:50%; bottom: 18px; transform: translateX(-50%);
@@ -316,15 +321,12 @@
     }
     .toast.show{ opacity:1; translate: 0 0 }
 
-    /* =========================================================
-       REDUCED DATA / MOTION
-       ========================================================= */
     @media (prefers-reduced-data: reduce){ body::before{ opacity:.12 } }
   </style>
 </head>
 <body>
   <!-- =========================================================
-       BACKGROUND WALLPAPER LAYER (fills most, not all)
+       BACKGROUND WALLPAPER LAYER
        ========================================================= -->
   <div id="wallpaper" aria-hidden="true"></div>
 
@@ -333,7 +335,7 @@
        ========================================================= -->
   <header aria-labelledby="title">
     <span class="hero-badge" aria-hidden="true">🎉 It’s Party Time</span>
-    <h1 id="title">Happy 21st Birthday <span id="friendName"> <!-- // EDIT HERE: your friend’s name -->Fatemeh</span>! 🥳♥️🦀</h1>
+    <h1 id="title">Happy 21st Birthday <span id="friendName">Fatemeh</span>! 🥳♥️🦀</h1>
     <p class="hero-sub">Wish you a happiness, success, peace and more and more cuteness everyday🐈!</p>
   </header>
 
@@ -344,53 +346,21 @@
     <!-- ===================== SLIDESHOW ===================== -->
     <section class="card slideshow" aria-label="Photo slideshow">
       <div class="viewport" aria-live="polite">
-        <div class="track" id="track" style="--n:7; transform: translate3d(0,0,0);">
-          <!-- TIP: keep .jpg for fallback; loader below will swap if needed -->
-          <figure class="slide">
-            <img src="assets/photo1.jpg" alt="Photo 1: A favorite birthday memory" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#1</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo2.jpg" alt="Photo 2: Smiles and fun times" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#2</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo3.jpg" alt="Photo 3: Friends celebrating together" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#3</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo4.jpg" alt="Photo 4: A cheerful birthday moment" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#4</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo5.jpg" alt="Photo 5: Making a wish" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#5</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo6.jpg" alt="Photo 6: More cake, more joy" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#6</figcaption>
-          </figure>
-          <figure class="slide">
-            <img src="assets/photo7.jpg" alt="Photo 7: The perfect celebration" width="1200" height="900" loading="lazy" decoding="async" />
-            <figcaption class="slide-caption">#7</figcaption>
-          </figure>
-        </div>
+        <!-- Slides are injected by JS -->
+        <div class="track" id="track" style="--n:1; --i:0"></div>
       </div>
 
       <div class="controls">
         <button class="btn secondary" id="prev" aria-label="Previous photo">⟵ Prev</button>
-        <!-- 🔧 dots will be generated in JS to match slide count -->
         <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
         <button class="btn secondary" id="next" aria-label="Next photo">Next ⟶</button>
       </div>
 
       <div class="utility" role="group" aria-label="Utilities">
-        <!-- Music control appears automatically when party starts -->
         <button class="pill" id="musicToggle" hidden aria-pressed="false" aria-label="Play or pause the birthday music">
           <span class="icon" aria-hidden="true">🎵</span><span class="mini" id="musicLabel">Play music</span>
         </button>
 
-        <!-- Slideshow autoplay toggle -->
         <button class="pill" id="slideAutoToggle" aria-pressed="true" aria-label="Pause or play slideshow autoplay">
           <span class="icon" aria-hidden="true">🖼️</span><span class="mini" id="slideAutoLabel">Slideshow: Pause</span>
         </button>
@@ -427,7 +397,7 @@
   </footer>
 
   <!-- =========================================================
-       START OVERLAY (user gesture to start audio & effects)
+       START OVERLAY
        ========================================================= -->
   <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Start birthday celebration">
     <div class="overlay-inner">
@@ -456,18 +426,45 @@
 
   <script>
   /* ============================================================
-     CORE SCRIPT
-     - FIX: slide translation uses 100/slideCount increments
-     - Dots are generated to match slide count
-     - Image formats more flexible via onerror fallbacks
+     SLIDESHOW HOW-TO (edit these without touching HTML) 💡
+     ------------------------------------------------------------
+     - Add photos: update SLIDES (files live under ASSETS_DIR)
+     - Aspect ratio box: set CSS var --ratio on .slideshow (e.g., 16/9)
+     - Autoplay:
+         AUTOPLAY = true|false; INTERVAL_MS = 3800;
+         Users with prefers-reduced-motion start paused regardless.
+     - Contain/Cover thresholds (auto 'contain' for extremes):
+         RATIO_CONTAIN_MIN = 0.90; RATIO_CONTAIN_MAX = 1.60;
+     - Format fallbacks if a URL 404s (order can be changed):
+         FALLBACK_EXTS = ['jpg','jpeg','png','webp','avif'];
      ============================================================ */
+
   (function(){
     const $  = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    /* ------------------------------------------------------------
-       ELEMENT REFERENCES
-       ------------------------------------------------------------ */
+    /* ---------- Config (edit) ---------- */
+    const ASSETS_DIR = "assets/";
+    const SLIDES = [
+      "photo1.jpg",
+      "photo2.jpg",
+      "photo3.jpg",
+      "photo4.jpg",
+      "photo5.jpg",
+      "photo6.jpg",
+      "photo7.jpg",
+      // add more...
+    ];
+
+    let AUTOPLAY    = true;     // default; will be disabled if prefers-reduced-motion
+    let INTERVAL_MS = 3800;
+
+    const RATIO_CONTAIN_MIN = 0.90;
+    const RATIO_CONTAIN_MAX = 1.60;
+
+    const FALLBACK_EXTS = ['jpg','jpeg','png','webp','avif'];
+
+    /* ---------- Elements ---------- */
     const overlay       = $('#overlay');
     const startBtn      = $('#start');
     const music         = $('#music');
@@ -485,145 +482,164 @@
     const yearEl        = $('#year');
     const videoEl       = $('#video');
 
-    const track = $('#track');
     const viewport = $('.viewport');
-    const prev  = $('#prev');
-    const next  = $('#next');
+    const track    = $('#track');
     const dotsWrap = $('#dots');
+    const prevBtn  = $('#prev');
+    const nextBtn  = $('#next');
 
-    /* ------------------------------------------------------------
-       STATE
-       ------------------------------------------------------------ */
-    let slides = $$('.slide');
-    let dots = [];
+    /* ---------- State ---------- */
     let index = 0;
+    let timer = null;
     let hasCelebrated = false;
-    let slideTimer = null;
-    let slideAuto = true;               // slideshow autoplay on by default
     let musicWasPlayingBeforeVideo = false;
+
+    const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedData   = () => (navigator.connection?.saveData) || matchMedia('(prefers-reduced-data: reduce)').matches;
 
     yearEl.textContent = new Date().getFullYear();
     if(!nameEl.textContent.trim()){ nameEl.textContent = 'Friend'; }
 
-    /* ------------------------------------------------------------
-       PREFERENCES
-       ------------------------------------------------------------ */
-    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const prefersReducedData   = () => (navigator.connection?.saveData) || window.matchMedia('(prefers-reduced-data: reduce)').matches;
+    // Respect reduced motion for autoplay
+    if (prefersReducedMotion()) AUTOPLAY = false;
 
     /* ============================================================
-       IMAGE FORMAT FLEXIBILITY
-       - If current src 404s, try jpeg → png → webp → avif
-       - You can add data-exts="webp,png,jpg" to customize
+       Build Slides from SLIDES[]
        ============================================================ */
-    function addImageFallbacks(){
-      const fallbackOrderDefault = ['jpg','jpeg','png','webp','avif'];
-      $$('.slide img').forEach(img=>{
-        const url = new URL(img.src, location.href);
-        const base = img.getAttribute('data-base') || url.href.replace(/\.\w+(\?.*)?$/,'');
-        const providedExt = img.getAttribute('data-exts');
-        const order = (providedExt ? providedExt.split(',') : fallbackOrderDefault)
-                      .filter(Boolean)
-                      .map(s=>s.trim().toLowerCase());
+    function resolveSrc(name){
+      // allow absolute/remote or already-with-path strings
+      if (/^https?:\/\//i.test(name) || name.startsWith('/') || name.includes('/')) return name;
+      return ASSETS_DIR + name;
+    }
 
-        let tried = new Set([ (url.pathname.match(/\.([a-z0-9]+)$/i)||[])[1] ]);
-        img.addEventListener('error', function onErr(){
-          for(const ext of order){
-            if(tried.has(ext)) continue;
-            tried.add(ext);
-            img.src = `${base}.${ext}`;
-            return;
-          }
+    function baseWithoutExt(url){
+      return url.replace(/\.\w+(?=$|[#?])/,'');
+    }
+    function extFromUrl(url){
+      const m = url.match(/\.([a-z0-9]+)(?=$|[#?])/i);
+      return m ? m[1].toLowerCase() : '';
+    }
+
+    function createSlide(i, src){
+      const fig = document.createElement('figure');
+      fig.className = 'slide';
+
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      // default intrinsic dimensions for better CLS behavior
+      img.width = 1600;
+      img.height = 1200;
+
+      const fullSrc = resolveSrc(src);
+      img.src = fullSrc;
+      img.alt = `Photo ${i+1}`;
+      img.setAttribute('data-base', baseWithoutExt(fullSrc));
+      img.setAttribute('data-ext', extFromUrl(fullSrc));
+
+      // format fallback on error
+      setupImgFallback(img);
+
+      // contain/cover decision after load
+      img.addEventListener('load', ()=>{
+        const r = (img.naturalWidth || 1) / (img.naturalHeight || 1);
+        if (r < RATIO_CONTAIN_MIN || r > RATIO_CONTAIN_MAX){
+          img.classList.add('contain');
+        }
+      });
+
+      const cap = document.createElement('figcaption');
+      cap.className = 'slide-caption';
+      cap.textContent = `#${i+1}`;
+
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      return fig;
+    }
+
+    function setupImgFallback(img){
+      const tried = new Set();
+      const base = img.getAttribute('data-base') || baseWithoutExt(img.src);
+      const startExt = img.getAttribute('data-ext') || extFromUrl(img.src);
+      if (startExt) tried.add(startExt);
+
+      img.addEventListener('error', function onErr(){
+        const nextExt = FALLBACK_EXTS.find(ext => !tried.has(ext));
+        if (!nextExt){
           img.removeEventListener('error', onErr);
-        }, { once:false });
+          return;
+        }
+        tried.add(nextExt);
+        img.src = `${base}.${nextExt}`;
       });
     }
 
-    /* ============================================================
-       SLIDESHOW LOGIC
-       - translate by (index * 100 / N)%
-       - track has CSS var --n = N
-       - dots generated dynamically
-       ============================================================ */
-    function measureAndBind(){
-      slides = $$('.slide');
-      const N = slides.length || 1;
-      track.style.setProperty('--n', N);
-      buildDots(N);
-      go(Math.min(index, N-1), false);
+    function renderSlides(){
+      track.innerHTML = '';
+      const n = Math.max(1, SLIDES.length);
+      track.style.setProperty('--n', n);
+      SLIDES.forEach((s, i)=> track.appendChild(createSlide(i, s)));
+      buildDots(n);
+      setIndex(0, false);
     }
 
-    function buildDots(N){
+    /* ============================================================
+       Dots / Nav
+       ============================================================ */
+    let dots = [];
+    function buildDots(n){
       dotsWrap.innerHTML = '';
       dots = [];
-      for(let i=0;i<N;i++){
+      for(let i=0;i<n;i++){
         const d = document.createElement('span');
         d.className = 'dot';
-        d.setAttribute('role','tab');
+        d.setAttribute('role', 'tab');
         d.setAttribute('aria-label', `Photo ${i+1}`);
-        d.dataset.i = String(i);
-        d.addEventListener('click', ()=>{ go(i); resetAutoKick(); });
+        d.addEventListener('click', ()=>{ setIndex(i); kickAutoplay(); });
         dotsWrap.appendChild(d);
         dots.push(d);
       }
+      updateDots();
+    }
+    function updateDots(){
+      dots.forEach((d, i)=> d.setAttribute('aria-current', i===index ? 'true' : 'false'));
     }
 
-    function go(i, announce=true){
-      const N = slides.length || 1;
-      index = (i + N) % N;
-      // translateX percentage is relative to TRACK width; move by 1/N each step
-      const pct = (index * (100 / N));
-      track.style.transform = `translate3d(-${pct}%, 0, 0)`;
-      dots.forEach((d, di)=> d.setAttribute('aria-current', di===index ? 'true' : 'false'));
-      if(announce){ sr.textContent = `Photo ${index+1} of ${N}`; }
+    /* ============================================================
+       Movement (via CSS vars --i and --n)
+       ============================================================ */
+    function setIndex(i, announce = true){
+      const n = Math.max(1, SLIDES.length);
+      index = (i + n) % n;
+      track.style.setProperty('--i', index);
+      updateDots();
+      if(announce){ sr.textContent = `Photo ${index+1} of ${n}`; }
     }
-    const nextSlide = ()=> go(index+1);
-    const prevSlide = ()=> go(index-1);
+    const next = ()=> setIndex(index+1);
+    const prev = ()=> setIndex(index-1);
 
-    function startAuto(){
-      if(slideTimer) return;
-      slideAuto = true;
-      slideAutoBtn.setAttribute('aria-pressed', 'true');
-      slideAutoLabel.textContent = 'Slideshow: Pause';
-      slideTimer = setInterval(nextSlide, 3800); // ~3.8s feels smooth with easing
-    }
-    function stopAuto(){
-      slideAuto = false;
-      slideAutoBtn.setAttribute('aria-pressed', 'false');
-      slideAutoLabel.textContent = 'Slideshow: Play';
-      clearInterval(slideTimer);
-      slideTimer = null;
-    }
-    function toggleAuto(){ slideAuto ? stopAuto() : startAuto(); }
-
-    // Respect prefers-reduced-motion: do not auto-start
-    if(prefersReducedMotion()){ stopAuto(); }
-    else { startAuto(); }
-
-    next?.addEventListener('click', ()=>{ nextSlide(); resetAutoKick(); });
-    prev?.addEventListener('click', ()=>{ prevSlide(); resetAutoKick(); });
-    slideAutoBtn.addEventListener('click', toggleAuto);
-
-    function resetAutoKick(){
-      if(!slideAuto) return;
-      clearInterval(slideTimer);
-      slideTimer = setInterval(nextSlide, 3800);
+    /* Keep transform stable on resize */
+    if('ResizeObserver' in window){
+      new ResizeObserver(()=> track.style.setProperty('--i', index)).observe(viewport);
+    }else{
+      addEventListener('resize', ()=> track.style.setProperty('--i', index));
     }
 
-    // Pointer/touch swipe
-    (()=> {
-      let x0=null, t=null, dragging=false;
+    /* Pointer/touch swipe */
+    (function(){
+      let x0=null, t0=0, dragging=false;
       const onStart = (e)=>{
         dragging=true;
-        x0=(e.touches?e.touches[0].clientX:e.clientX); t=Date.now();
+        x0 = (e.touches?e.touches[0].clientX:e.clientX);
+        t0 = performance.now();
       };
-      const onEnd   = (e)=>{
+      const onEnd = (e)=>{
         if(!dragging) return;
         dragging=false;
         const x1 = (e.changedTouches?e.changedTouches[0].clientX:e.clientX);
         const dx = x1 - x0;
-        const dt = Date.now()-t;
-        if(Math.abs(dx)>40 && dt<600){ dx<0 ? nextSlide() : prevSlide(); resetAutoKick(); }
+        const dt = performance.now() - t0;
+        if(Math.abs(dx) > 40 && dt < 600){ dx<0 ? next() : prev(); kickAutoplay(); }
         x0=null;
       };
       viewport.addEventListener('pointerdown', onStart);
@@ -632,14 +648,32 @@
       viewport.addEventListener('touchend', onEnd);
     })();
 
-    // Recompute on resize (keeps index aligned visually)
-    let ro;
-    if('ResizeObserver' in window){
-      ro = new ResizeObserver(()=> go(index, false));
-      ro.observe(viewport);
-    }else{
-      window.addEventListener('resize', ()=> go(index, false));
+    /* Controls */
+    nextBtn.addEventListener('click', ()=>{ next(); kickAutoplay(); });
+    prevBtn.addEventListener('click', ()=>{ prev(); kickAutoplay(); });
+
+    /* ============================================================
+       Autoplay
+       ============================================================ */
+    function startAuto(){
+      if(timer) return;
+      slideAutoBtn.setAttribute('aria-pressed','true');
+      slideAutoLabel.textContent = 'Slideshow: Pause';
+      timer = setInterval(()=> next(), INTERVAL_MS);
     }
+    function stopAuto(){
+      slideAutoBtn.setAttribute('aria-pressed','false');
+      slideAutoLabel.textContent = 'Slideshow: Play';
+      clearInterval(timer); timer = null;
+    }
+    function toggleAuto(){ timer ? stopAuto() : startAuto(); }
+    function kickAutoplay(){
+      if(!timer) return;
+      clearInterval(timer);
+      timer = setInterval(()=> next(), INTERVAL_MS);
+    }
+    slideAutoBtn.addEventListener('click', toggleAuto);
+    if(AUTOPLAY){ startAuto(); } else { stopAuto(); }
 
     /* ============================================================
        MUSIC CONTROLS
@@ -650,7 +684,6 @@
       musicLabel.textContent = playing ? 'Pause music' : 'Play music';
     }
     musicToggle.addEventListener('click', async ()=>{
-      // If video is currently playing, keep music muted per your rule
       if(!videoEl.paused){
         showToast('Music stays paused while video plays 📹');
         if(!music.paused){ music.pause(); }
@@ -667,9 +700,7 @@
     music.addEventListener('play', updateMusicUI);
     music.addEventListener('pause', updateMusicUI);
 
-    /* ============================================================
-       VIDEO ↔ MUSIC INTERACTION
-       ============================================================ */
+    /* Video pauses/resumes music */
     videoEl.addEventListener('play', ()=>{
       musicWasPlayingBeforeVideo = !music.paused;
       if(musicWasPlayingBeforeVideo){ music.pause(); }
@@ -707,7 +738,7 @@
     });
 
     /* ============================================================
-       TOAST HELPER
+       TOAST
        ============================================================ */
     let toastTimer = null;
     function showToast(msg='Done'){
@@ -718,33 +749,11 @@
     }
 
     /* ============================================================
-       START OVERLAY -> PARTY!
+       START OVERLAY → PARTY!
        ============================================================ */
-    let celebrate = ()=>{};
-    (function(){
-      // defined here to keep related helpers close
-      celebrate = function(){
-        if(hasCelebrated) return;
-        hasCelebrated = true;
-
-        confettiBurst();
-
-        // Always show stickers (even on data saver), but disable animation if saving data.
-        const disableStickerAnim = prefersReducedData();
-        spawnStickers(disableStickerAnim ? 16 : 28, disableStickerAnim);
-
-        // Balloons respect data saver
-        if(!prefersReducedData()){
-          spawnBalloons(26);
-        } else {
-          showToast('Effects reduced to save data.');
-        }
-      };
-    })();
-
     startBtn.addEventListener('click', async ()=>{
       if(hasCelebrated) return;
-      try{ await music.play(); }catch{} // gesture-compliant
+      try{ await music.play(); }catch{}
       musicToggle.removeAttribute('hidden');
       updateMusicUI();
       setTimeout(()=> musicToggle.focus(), 60);
@@ -758,8 +767,21 @@
       }
     });
 
+    function celebrate(){
+      if(hasCelebrated) return;
+      hasCelebrated = true;
+      confettiBurst();
+      const disableStickerAnim = prefersReducedData();
+      spawnStickers(disableStickerAnim ? 16 : 28, disableStickerAnim);
+      if(!prefersReducedData()){
+        spawnBalloons(26);
+      } else {
+        showToast('Effects reduced to save data.');
+      }
+    }
+
     /* ============================================================
-       CONFETTI (single burst)
+       CONFETTI
        ============================================================ */
     function confettiBurst(){
       const ctx = confettiCanvas.getContext('2d');
@@ -794,11 +816,8 @@
           p.vx *= air; p.vy *= air;
           p.x += p.vx; p.y += p.vy;
           p.rot += p.vr;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rot);
-          ctx.fillStyle = p.col;
-          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.fillStyle = p.col; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
           ctx.restore();
         }
         if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
@@ -808,7 +827,7 @@
     }
 
     /* ============================================================
-       BALLOONS (linger longer)
+       BALLOONS
        ============================================================ */
     function spawnBalloons(count=26){
       const palette = [
@@ -836,71 +855,53 @@
     }
 
     /* ============================================================
-       STICKERS (kitties, paws, MORE hearts)
+       STICKERS (cute hearts & cats)
        ============================================================ */
     const STICKERS = [
-      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-         <defs>
-           <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-             <stop offset="0" stop-color="#ffd7ef"/><stop offset="1" stop-color="#ff8bd2"/>
-           </linearGradient>
-         </defs>
+      `<svg viewBox="0 0 64 64" aria-hidden="true">
+         <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+           <stop offset="0" stop-color="#ffd7ef"/><stop offset="1" stop-color="#ff8bd2"/></linearGradient></defs>
          <path d="M10 26c0 14 10 24 22 24s22-10 22-24l4-12-10 5c-4-5-10-7-16-7s-12 2-16 7l-10-5 4 12z" fill="url(#g1)" stroke="#2a0f22" stroke-opacity=".25"/>
          <circle cx="26" cy="34" r="3" fill="#2a0f22"/><circle cx="38" cy="34" r="3" fill="#2a0f22"/>
          <path d="M28 42c3 2 5 2 8 0" stroke="#2a0f22" stroke-width="2" stroke-linecap="round" fill="none"/>
        </svg>`,
-      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      `<svg viewBox="0 0 64 64" aria-hidden="true">
          <circle cx="32" cy="40" r="12" fill="#b784ff"/><circle cx="18" cy="28" r="6" fill="#b784ff"/>
          <circle cx="46" cy="28" r="6" fill="#b784ff"/><circle cx="26" cy="22" r="5" fill="#b784ff"/><circle cx="38" cy="22" r="5" fill="#b784ff"/>
          <path d="M22 40c6 4 14 4 20 0" stroke="#2a0f22" stroke-opacity=".25"/>
        </svg>`,
-      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      `<svg viewBox="0 0 64 64" aria-hidden="true">
          <path d="M32 54s-14-9-20-16C6 32 6 22 14 18c6-3 12 0 14 4 2-4 8-7 14-4 8 4 8 14 2 20-6 7-20 16-20 16z" fill="#ff8bd2" />
          <path d="M20 16l2-4m4 2l2-4" stroke="#ffd7ef" stroke-linecap="round"/>
        </svg>`,
-      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      `<svg viewBox="0 0 64 64" aria-hidden="true">
          <path d="M12 28c0-7 6-12 12-12 5 0 8 2 8 5s3-5 10-5c8 0 14 7 12 16-3 12-18 21-22 24-4-3-20-12-22-24z" fill="#ffa1d9"/>
        </svg>`,
-      `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      `<svg viewBox="0 0 64 64" aria-hidden="true">
          <path d="M32 50C14 38 10 32 10 24c0-6 5-10 10-10 6 0 10 6 12 8 2-2 6-8 12-8 5 0 10 4 10 10 0 8-4 14-22 26z" fill="none" stroke="#ffb3e6" stroke-width="3"/>
        </svg>`
     ];
 
     function spawnStickers(count=28, disableAnim=false){
-      const W = window.innerWidth, H = window.innerHeight;
-      const centerBox = { x1: W*0.22, y1: H*0.22, x2: W*0.78, y2: H*0.78 }; // avoid the middle
+      const W = innerWidth, H = innerHeight;
+      const centerBox = { x1: W*0.22, y1: H*0.22, x2: W*0.78, y2: H*0.78 };
       for(let i=0;i<count;i++){
         const el = document.createElement('div');
         el.className = 'sticker';
-        // Bias toward hearts
         const r = Math.random();
-        if(r < 0.6){
-          const heartIdx = 2 + Math.floor(Math.random()*3); // 2..4
-          el.innerHTML = STICKERS[heartIdx];
-        }else{
-          el.innerHTML = STICKERS[Math.floor(Math.random()*2)]; // cat or paw
-        }
-        // Random edge-ish position
-        let x = Math.random()*W;
-        let y = Math.random()*H;
+        if(r < 0.6) el.innerHTML = STICKERS[2 + Math.floor(Math.random()*3)];
+        else el.innerHTML = STICKERS[Math.floor(Math.random()*2)];
+        let x = Math.random()*W, y = Math.random()*H;
         if(x>centerBox.x1 && x<centerBox.x2 && y>centerBox.y1 && y<centerBox.y2){
-          const toLeft   = x - centerBox.x1;
-          const toRight  = centerBox.x2 - x;
-          const toTop    = y - centerBox.y1;
-          const toBottom = centerBox.y2 - y;
+          const toLeft=x-centerBox.x1, toRight=centerBox.x2-x, toTop=y-centerBox.y1, toBottom=centerBox.y2-y;
           const min = Math.min(toLeft,toRight,toTop,toBottom);
-          if(min===toLeft) x = centerBox.x1 - 16;
-          else if(min===toRight) x = centerBox.x2 + 16;
-          else if(min===toTop) y = centerBox.y1 - 16;
-          else y = centerBox.y2 + 16;
+          if(min===toLeft) x=centerBox.x1-16; else if(min===toRight) x=centerBox.x2+16; else if(min===toTop) y=centerBox.y1-16; else y=centerBox.y2+16;
         }
-        // Size, opacity, motion variance
         const sizeFactor = (Math.random()*1.4 + 0.6).toFixed(2);
         const alpha      = (Math.random()*0.18 + 0.26).toFixed(2);
         const dx         = (Math.random()*26+12) * (Math.random()<0.5?-1:1);
         const dy         = -(Math.random()*28+16);
         const dur        = (Math.random()*6+9).toFixed(2) + 's';
-
         el.style.left = Math.max(4, Math.min(W-60, x)) + 'px';
         el.style.top  = Math.max(4, Math.min(H-60, y)) + 'px';
         el.style.setProperty('--sz', sizeFactor);
@@ -908,17 +909,17 @@
         el.style.setProperty('--dx', dx+'px');
         el.style.setProperty('--dy', dy+'px');
         el.style.setProperty('--dur', dur);
-        if(disableAnim){ el.style.animation = 'none'; }
+        if(disableAnim) el.style.animation = 'none';
         stickersLayer.appendChild(el);
       }
     }
 
     /* ============================================================
-       KEYBOARD SHORTCUTS
+       Keyboard shortcuts
        ============================================================ */
-    window.addEventListener('keydown', (e)=>{
-      if(e.key === 'ArrowRight') { nextSlide(); resetAutoKick(); }
-      if(e.key === 'ArrowLeft')  { prevSlide(); resetAutoKick(); }
+    addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowRight'){ next(); kickAutoplay(); }
+      if(e.key === 'ArrowLeft'){ prev(); kickAutoplay(); }
       if((e.key === ' ' || e.key === 'k') && !e.target.closest('button, a, input, textarea')){
         e.preventDefault();
         if(!musicToggle.hasAttribute('hidden')) musicToggle.click();
@@ -928,96 +929,9 @@
     /* ============================================================
        INIT
        ============================================================ */
-    addImageFallbacks(); // set up format fallbacks
-    measureAndBind();    // set --n, dots, and position
-    go(0, false);        // ensure first slide is aligned
-
-    /* ============================================================
-       BALLOONS + CONFETTI HELPERS (unchanged)
-       ============================================================ */
-    function spawnBalloons(count=26){ /* implementation kept above */ }
-
-    function confettiBurst(){ /* implementation kept above */ }
+    renderSlides();
 
   })();
-
-  /* ============================================================
-     Standalone helpers used in celebrate() above
-     ============================================================ */
-  function spawnBalloons(count=26){
-    const balloonsLayer = document.getElementById('balloons');
-    const prefersReducedMotion = ()=> window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const palette = [
-      'hsl(330 95% 72%)','hsl(280 85% 75%)','hsl(322 85% 72%)','hsl(260 75% 70%)','hsl(300 70% 72%)'
-    ];
-    const minDur = prefersReducedMotion()? 0.01 : 14;
-    const maxDur = prefersReducedMotion()? 0.02 : 22;
-
-    for(let i=0;i<count;i++){
-      const b = document.createElement('div');
-      b.className = 'balloon';
-      const clr = palette[Math.floor(Math.random()*palette.length)];
-      const left = Math.random()*100;
-      const drift = (Math.random()*2-1) * 90 + 'px';
-      b.style.left = `min(calc(${left}vw - 16px), calc(100vw - 24px))`;
-      b.style.background = `radial-gradient(circle at 30% 30%, #fff6, transparent 35%), ${clr}`;
-      b.style.setProperty('--x', drift);
-      b.style.animationDuration = (Math.random()*(maxDur-minDur)+minDur) + 's';
-      b.style.animationDelay = (Math.random()*1.8) + 's';
-      balloonsLayer.appendChild(b);
-      const kill = () => b.remove();
-      b.addEventListener('animationend', kill);
-      setTimeout(kill, 32000);
-    }
-  }
-
-  function confettiBurst(){
-    const confettiCanvas = document.getElementById('confetti');
-    const prefersReducedMotion = ()=> window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const ctx = confettiCanvas.getContext('2d');
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const {innerWidth: W, innerHeight: H} = window;
-    confettiCanvas.width = Math.floor(W * dpr);
-    confettiCanvas.height = Math.floor(H * dpr);
-    confettiCanvas.style.width = W + 'px';
-    confettiCanvas.style.height = H + 'px';
-    ctx.scale(dpr, dpr);
-
-    const n = 150;
-    const colors = ['#ffd7ef','#b784ff','#ff8bd2','#ffb3e1','#e1c6ff','#ffcadf','#dcb2ff'];
-    const parts = Array.from({length:n}, ()=>({
-      x: W/2, y: H*0.35,
-      vx: (Math.random()*2-1)*7,
-      vy: (Math.random()*-1-0.8)*10,
-      w: Math.random()*8+5,
-      h: Math.random()*3+2,
-      rot: Math.random()*Math.PI,
-      vr: (Math.random()*2-1)*0.2,
-      col: colors[(Math.random()*colors.length)|0]
-    }));
-    const start = performance.now();
-    const grav = 0.25, air = 0.996;
-
-    function frame(t){
-      const elapsed = t - start;
-      ctx.clearRect(0,0,W,H);
-      for(const p of parts){
-        p.vy += grav;
-        p.vx *= air; p.vy *= air;
-        p.x += p.vx; p.y += p.vy;
-        p.rot += p.vr;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.col;
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-      }
-      if(elapsed < 1600 && !prefersReducedMotion()) requestAnimationFrame(frame);
-      else ctx.clearRect(0,0,W,H);
-    }
-    requestAnimationFrame(frame);
-  }
   </script>
 
   <!-- =========================================================
@@ -1026,6 +940,7 @@
        - Accent colors: change --accent / --accent-2 in :root
        - Background: tweak --bg-* and gradients in body
        - Wallpaper: change #wallpaper background-image
+       - Slideshow ratio: set --ratio on .slideshow (e.g., 16/9)
        ========================================================= -->
 </body>
 </html>
